@@ -19,11 +19,17 @@ export default function RegisterPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fullName, username, email, password }),
     })
-    if (res.ok) {
+
+    if (res.status === 201) {
       router.push('/login')
     } else {
-      const data = await res.json()
-      setError(data.message || 'Registration failed')
+      const data = await res.json().catch(() => ({}))
+      setError(
+        data.message ||
+        (res.status === 409
+          ? 'Email or username already in use'
+          : 'Registration failed')
+      )
     }
   }
 
@@ -31,41 +37,43 @@ export default function RegisterPage() {
     <div className="relative flex items-center justify-center h-screen bg-[#274690] overflow-hidden">
       <form
         onSubmit={handleSubmit}
-        className="relative z-10 flex flex-col items-center text-white space-y-3"
+        className="relative z-10 flex flex-col items-center text-white space-y-4 p-8 bg-black/20 rounded-xl"
       >
         <h1 className="text-3xl font-bold">Register</h1>
-        <p className="text-sm">Create your account</p>
 
         <input
           type="text"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           placeholder="Full Name"
-          className="w-80 px-4 py-2 bg-transparent border border-white rounded-full placeholder-white text-white focus:outline-none"
+          className="w-80 px-4 py-2 border border-white rounded-full placeholder-white bg-transparent text-white focus:outline-none"
           required
         />
+
         <input
           type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           placeholder="Username"
-          className="w-80 px-4 py-2 bg-transparent border border-white rounded-full placeholder-white text-white focus:outline-none"
+          className="w-80 px-4 py-2 border border-white rounded-full placeholder-white bg-transparent text-white focus:outline-none"
           required
         />
+
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Email"
-          className="w-80 px-4 py-2 bg-transparent border border-white rounded-full placeholder-white text-white focus:outline-none"
+          className="w-80 px-4 py-2 border border-white rounded-full placeholder-white bg-transparent text-white focus:outline-none"
           required
         />
+
         <input
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Password"
-          className="w-80 px-4 py-2 bg-transparent border border-white rounded-full placeholder-white text-white focus:outline-none"
+          className="w-80 px-4 py-2 border border-white rounded-full placeholder-white bg-transparent text-white focus:outline-none"
           required
         />
 
@@ -81,7 +89,7 @@ export default function RegisterPage() {
         <p className="text-sm">
           Already have an account?{' '}
           <Link href="/login" className="underline">
-            Login!
+            Login
           </Link>
         </p>
       </form>

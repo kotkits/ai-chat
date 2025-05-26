@@ -3,10 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import { MongoClient } from "mongodb"
 import bcrypt from "bcrypt"
 
-const client = new MongoClient(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
+const client = new MongoClient(process.env.MONGODB_URI)
 
 export default NextAuth({
   session: {
