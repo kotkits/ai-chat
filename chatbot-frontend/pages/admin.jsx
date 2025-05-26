@@ -3,27 +3,31 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 
-import DashboardLayout from '../components/DashboardLayout'
-import AdminUsers      from '../components/AdminUsers'
-import AuditLogs       from '../components/AuditLogs'
-import AdminSettings   from '../components/AdminSettings'
-import { adminFullMenu } from '../data/menus'
+import DashboardLayout    from '../components/DashboardLayout'
+import HomeContent        from '../components/HomeContent'
+import ContactsContent    from '../components/ContactsContent'
+import AutomationContent  from '../components/AutomationContent'
+import LiveChatContent    from '../components/LiveChatContent'
+import BroadcastingContent from '../components/BroadcastingContent'
+import SettingsContent    from '../components/SettingsContent'
+import AdminUsers         from '../components/AdminUsers'
+import AuditLogs          from '../components/AuditLogs'
+import AdminSettings      from '../components/AdminSettings'
+import { adminFullMenu }  from '../data/menus'
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession()
   const router = useRouter()
 
+  // Protect route: only admins allowed
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.replace('/login')
-    } else if (
-      status === 'authenticated' &&
-      session.user.role !== 'admin'
-    ) {
+    if (status === 'unauthenticated' ||
+       (status === 'authenticated' && session.user.role !== 'admin')) {
       router.replace('/login')
     }
   }, [status, session, router])
 
+  // Show loading until we know auth status
   if (status !== 'authenticated') {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -36,21 +40,21 @@ export default function AdminDashboard() {
     <DashboardLayout menuItems={adminFullMenu}>
       {(selected) => {
         switch (selected) {
-          // user items
-          case 'home':         return <div>Home (user)</div>
-          case 'contacts':     return <div>Contacts (user)</div>
-          case 'automation':   return <div>Automation (user)</div>
-          case 'livechat':     return <div>Live Chat (user)</div>
-          case 'broadcasting': return <div>Broadcasting (user)</div>
-          case 'settings':     return <div>User Settings</div>
+          // user‐portal items
+          case 'home':         return <HomeContent />
+          case 'contacts':     return <ContactsContent />
+          case 'automation':   return <AutomationContent />
+          case 'livechat':     return <LiveChatContent />
+          case 'broadcasting': return <BroadcastingContent />
+          case 'settings':     return <SettingsContent />
 
-          // admin items
+          // admin‐only items
           case 'users':          return <AdminUsers />
           case 'logs':           return <AuditLogs />
           case 'settings_admin': return <AdminSettings />
 
-          default:
-            return <AdminUsers />
+          // fallback
+          default: return <HomeContent />
         }
       }}
     </DashboardLayout>
