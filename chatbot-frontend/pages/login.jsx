@@ -29,7 +29,7 @@ export default function LoginPage() {
     if (res.error) {
       setError(res.error)
     } else {
-      router.replace(res.role === 'admin' ? '/admin' : '/dashboard')
+      router.replace(res.url)  
     }
   }
 
