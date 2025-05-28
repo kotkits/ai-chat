@@ -18,8 +18,16 @@ export default function Sidebar({
     <aside
       className={`
         bg-[#4E71FF] ${collapsed ? 'w-16' : 'w-56'}
-        flex flex-col py-6 h-screen transition-all duration-300
+        flex flex-col py-6 h-screen min-h-screen
+        transition-all duration-300
+        border-r border-[#BBFBFF]
+        shadow-md
       `}
+      style={{
+        height: '100vh',           // Always full viewport height
+        minHeight: '100vh',
+        maxHeight: '100vh',
+      }}
     >
       {/* Profile Button */}
       {session && (
@@ -70,7 +78,7 @@ export default function Sidebar({
                 border-0
                 transition-colors duration-200 ease-in-out
                 ${isActive
-                  ? 'bg-white text-[#4E71FF] font-bold shadow-md'
+                  ? 'bg-white text-[#4E71FF] font-bold shadow'
                   : 'bg-[#4E71FF] text-white hover:bg-[#5A85FF] active:bg-[#3155b3]'
                 }
               `}
