@@ -39,17 +39,56 @@ export default function SettingsContent() {
 
   const renderSection = (item) => {
     switch (item) {
-      case 'General':
-        return (
-          <div>
-            <label className="block text-gray-700 mb-1">Notifications</label>
-            <select className="w-full border border-gray-300 rounded-lg p-2">
-              <option>All Messages</option>
-              <option>Only Mentions</option>
-              <option>None</option>
-            </select>
-          </div>
-        )
+case 'General':
+  return (
+    <div className="space-y-8">
+
+      {/* Account Time Zone */}
+      <div className="flex flex-col gap-2">
+        <label className="font-medium text-gray-700">Account Time Zone</label>
+        <select className="w-full border border-gray-300 rounded-lg px-3 py-2">
+          <option>(UTC+08:00) - Philippine Standard Time</option>
+          {/* Add more options if needed */}
+        </select>
+      </div>
+
+      {/* Clone to Another Account */}
+      <div className="flex flex-col gap-2">
+        <label className="font-medium text-gray-700">Clone to Another Account</label>
+        <button className="w-fit bg-[#007aff] hover:bg-[#005ecc] text-white font-semibold px-5 py-2 rounded-lg transition">
+          Clone This Account
+        </button>
+      </div>
+
+      {/* Use as Template */}
+      <div className="flex flex-col gap-2">
+        <label className="font-medium text-gray-700">Use as Template</label>
+        <button className="w-fit bg-[#007aff] hover:bg-[#005ecc] text-white font-semibold px-5 py-2 rounded-lg transition">
+          Create Account Template
+        </button>
+      </div>
+
+      {/* Leave Account */}
+      <div className="flex flex-col gap-2">
+        <label className="font-medium text-gray-700">Leave Account</label>
+        <button
+          className="w-fit bg-gray-100 text-gray-400 font-semibold px-5 py-2 rounded-lg cursor-not-allowed"
+          disabled
+        >
+          Leave
+        </button>
+      </div>
+
+      {/* Delete Account */}
+      <div className="flex flex-col gap-2">
+        <label className="font-medium text-gray-700">Delete Account</label>
+        <button className="w-fit border border-red-500 text-red-500 font-semibold px-5 py-2 rounded-lg hover:bg-red-50 transition">
+          Delete
+        </button>
+      </div>
+    </div>
+  )
+
       case 'Notifications':
         return (
           <div>
@@ -161,9 +200,7 @@ export default function SettingsContent() {
       <div className="flex-1 space-y-6 max-w-md">
         <h2 className="text-2xl font-bold text-[#4E71FF]">{active}</h2>
         {renderSection(active)}
-        <button className="mt-4 bg-[#4E71FF] text-white px-4 py-2 rounded-lg">
-          Save Settings
-        </button>
+          
       </div>
     </div>
   )

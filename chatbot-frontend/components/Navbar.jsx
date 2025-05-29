@@ -1,38 +1,35 @@
 // components/Navbar.jsx
 import React from 'react'
-import { useRouter } from 'next/router'
 import { signOut } from 'next-auth/react'
 
 export default function Navbar({ toggleSidebar }) {
-  const router = useRouter()
-
   return (
-    <nav className="
-      h-14 bg-[#4E71FF] flex items-center px-6
-      justify-between text-white
-    ">
+    <nav className="h-16 bg-white border-b border-gray-200 shadow-sm flex items-center justify-between px-4 md:px-6 z-50">
+      {/* Left: Brand and Sidebar Toggle */}
       <div className="flex items-center gap-4">
-        <span
-          className="material-symbols-outlined text-[28px] cursor-pointer"
+        <button
           onClick={toggleSidebar}
+          aria-label="Toggle sidebar"
+          className="text-gray-500 hover:text-primary transition md:hidden"
         >
-          menu
-        </span>
-        <h1 className="text-2xl font-bold">My Chatbot Dashboard</h1>
+          <span className="material-symbols-outlined text-2xl">menu</span>
+        </button>
+        <h1 className="text-lg font-semibold text-gray-800 tracking-tight">
+          Chatbot Dashboard
+        </h1>
       </div>
-      <button
-        className="
-          bg-[#BBFBFF] hover:bg-[#f2f7ff]
-          rounded-full p-2 border border-[#4E71FF]
-        "
-        onClick={() => {
-          signOut({ callbackUrl: '/login' })
-        }}
-      >
-        <span className="material-symbols-outlined text-[22px] text-[#4E71FF]">
-          logout
-        </span>
-      </button>
+
+      {/* Right: User Actions */}
+      <div className="flex items-center gap-3">
+        {/* Optional: Add a theme toggle here */}
+        <button
+          onClick={() => signOut({ callbackUrl: '/login' })}
+          className="flex items-center gap-2 bg-primary text-white px-3 py-2 rounded-md hover:bg-primary-dark transition"
+        >
+          <span className="material-symbols-outlined text-base">logout</span>
+          <span className="text-sm hidden sm:inline">Sign Out</span>
+        </button>
+      </div>
     </nav>
   )
 }
