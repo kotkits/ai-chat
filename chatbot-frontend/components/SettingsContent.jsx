@@ -36,6 +36,21 @@ const channelItems = [
 
 export default function SettingsContent() {
   const [active, setActive] = useState('General')
+  const [desktopOptions, setDesktopOptions] = useState([
+  { label: 'I get a new message from a conversation assigned to me', checked: true },
+  { label: 'There is a new conversation in unassigned folder', checked: false },
+  { label: 'A conversation is assigned to me', checked: false },
+])
+
+const [channelOptions, setChannelOptions] = useState([
+  { label: 'A conversation is assigned to me', checked: true },
+])
+
+const toggleOption = (setter, list) => (index) => {
+  const updated = [...list]
+  updated[index].checked = !updated[index].checked
+  setter(updated)
+}
 
   const renderSection = (item) => {
     switch (item) {
@@ -43,14 +58,6 @@ case 'General':
   return (
     <div className="space-y-8">
 
-      {/* Account Time Zone */}
-      <div className="flex flex-col gap-2">
-        <label className="font-medium text-gray-700">Account Time Zone</label>
-        <select className="w-full border border-gray-300 rounded-lg px-3 py-2">
-          <option>(UTC+08:00) - Philippine Standard Time</option>
-          {/* Add more options if needed */}
-        </select>
-      </div>
 
       {/* Clone to Another Account */}
       <div className="flex flex-col gap-2">
@@ -89,17 +96,63 @@ case 'General':
     </div>
   )
 
-      case 'Notifications':
-        return (
-          <div>
-            <label className="block text-gray-700 mb-1">Theme</label>
-            <select className="w-full border border-gray-300 rounded-lg p-2">
-              <option>Light</option>
-              <option>Dark</option>
-              <option>System Default</option>
-            </select>
-          </div>
-        )
+case 'Notifications':
+  return (
+    <div className="space-y-6">
+      {/* Theme Selector */}
+      <div>
+        <label className="block text-gray-700 mb-1">Theme</label>
+        <select className="w-full border border-gray-300 rounded-lg p-2">
+          <option>Light</option>
+          <option>Dark</option>
+          <option>System Default</option>
+        </select>
+      </div>
+
+      {/* Live Chat Notification Settings */}
+      <div className="space-y-6 border border-gray-200 rounded-md p-6 shadow-sm bg-white">
+        <h3 className="text-lg font-semibold text-gray-900">
+          Live Chat Notifications
+        </h3>
+
+        {/* Desktop Notifications */}
+        <div>
+          <h4 className="text-sm font-medium text-gray-700 mb-2">
+            Desktop Notifications
+          </h4>
+          {desktopOptions.map((opt, idx) => (
+            <label key={idx} className="flex items-start gap-2 text-sm text-gray-800 mb-2">
+              <input
+                type="checkbox"
+                checked={opt.checked}
+                onChange={() => toggleOption(setDesktopOptions, desktopOptions)(idx)}
+                className="mt-1 accent-[#4E71FF]"
+              />
+              <span>{opt.label}</span>
+            </label>
+          ))}
+        </div>
+
+        {/* Channel Notifications */}
+        <div>
+          <h4 className="text-sm font-medium text-gray-700 mb-2">
+            Channel Notifications
+          </h4>
+          {channelOptions.map((opt, idx) => (
+            <label key={idx} className="flex items-start gap-2 text-sm text-gray-800 mb-2">
+              <input
+                type="checkbox"
+                checked={opt.checked}
+                onChange={() => toggleOption(setChannelOptions, channelOptions)(idx)}
+                className="mt-1 accent-[#4E71FF]"
+              />
+              <span>{opt.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
       // TODO: flesh out the other sections below
       case 'Fields':
       case 'Tags':
