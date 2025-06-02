@@ -19,12 +19,12 @@ import "reactflow/dist/style.css";
 
 //
 // ─── TriggerNode ────────────────────────────────────────────────────────────
-// A green‐bordered box with a “+ New Trigger” button. Clicking it spawns the selector.
+// (no icon here; borders are green)
 //
 const TriggerNode = React.memo(function TriggerNode({ id, data }) {
   const nodeRef = useRef(null);
 
-  // Track resize drag state
+  // Resize tracking
   const isResizingRef = useRef(false);
   const startXRef = useRef(0);
   const startYRef = useRef(0);
@@ -135,7 +135,12 @@ const TriggerNode = React.memo(function TriggerNode({ id, data }) {
 
 //
 // ─── SelectorNode ──────────────────────────────────────────────────────────
-// A dashed‐border panel listing all possible steps. Each button passes its label upward.
+// Each branch-icon uses its official “brand” hex:
+//   • Messenger:    #0084FF
+//   • Instagram:    #E4405F
+//   • Telegram:     #37AEE2
+//   • SMS (generic):#34D399 (standard message-bubble green)
+//   • Email (generic):#374151 (neutral dark gray)
 //
 const SelectorNode = React.memo(function SelectorNode({ id, data }) {
   const nodeRef = useRef(null);
@@ -182,13 +187,13 @@ const SelectorNode = React.memo(function SelectorNode({ id, data }) {
               transition
             "
           >
-            {/* Use actual SVG icons for each branch */}
-            <span className="text-base flex-shrink-0">
+            {/* SVG icons with each brand’s “original” fill color */}
+            <span className="flex-shrink-0">
               {label === "Messenger" && (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-blue-500"
-                  fill="currentColor"
+                  className="h-6 w-6"
+                  fill="#0084FF"               // Messenger official blue
                   viewBox="0 0 24 24"
                 >
                   <path d="M12.002 2.002C6.475 2.002 2 6.478 2 12.006c0 2.4871.951 4.768 2.504 6.502L4 22l3.51-1.888A9.966 9.966 0 0 0 12.002 22c5.528 0 10.002-4.476 10.002-9.994 0-5.528-4.474-9.994-10.002-9.994Zm-1.174 13.318l-2.257-2.421-4.672 2.393 5.146-5.574 2.257 2.421 4.672-2.393-5.146 5.574Z" />
@@ -197,9 +202,9 @@ const SelectorNode = React.memo(function SelectorNode({ id, data }) {
               {label === "Instagram" && (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-pink-500"
+                  className="h-6 w-6"
+                  fill="#E4405F"               // Instagram “official” pink/red
                   viewBox="0 0 24 24"
-                  fill="currentColor"
                 >
                   <path d="M7.75 2C5.4 2 3.18 3.4 2 5.75v12.5C3.18 20.6 5.4 22 7.75 22h8.5c2.35 0 4.57-1.4 5.75-3.75V5.75C20.8 3.4 18.6 2 16.25 2h-8.5ZM12 7.2a4.8 4.8 0 1 1 0 9.6 4.8 4.8 0 0 1 0-9.6Zm5.3-.25a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z" />
                 </svg>
@@ -207,9 +212,9 @@ const SelectorNode = React.memo(function SelectorNode({ id, data }) {
               {label === "Telegram" && (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-blue-400"
+                  className="h-6 w-6"
+                  fill="#37AEE2"               // Telegram official blue
                   viewBox="0 0 24 24"
-                  fill="currentColor"
                 >
                   <path d="M12 2C6.48 2 2 6.48 2 12c0 4.418 2.86 8.166 6.844 9.5L12 22l3.156-.5C19.14 20.16 22 16.418 22 12c0-5.52-4.48-10-10-10Zm4.825 7.2l-1.9 9.07c-.143.61-.52.76-1.05.47l-2.9-2.14-1.4 1.35c-.155.155-.285.285-.585.285l.21-3.03 5.52-4.96c.24-.21-.05-.33-.37-.12l-6.82 4.28-2.94-.92c-.64-.195-.65-.64.13-.95l11.5-4.44c.53-.205 1.005.12.835.95Z" />
                 </svg>
@@ -217,9 +222,9 @@ const SelectorNode = React.memo(function SelectorNode({ id, data }) {
               {label === "SMS" && (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-green-500"
+                  className="h-6 w-6"
+                  fill="#34D399"               // “Generic SMS” bubble green
                   viewBox="0 0 24 24"
-                  fill="currentColor"
                 >
                   <path d="M20,2H4C2.897,2,2,2.897,2,4v16l4-4h14c1.103,0,2-0.897,2-2V4C22,2.897,21.103,2,20,2z" />
                 </svg>
@@ -227,9 +232,9 @@ const SelectorNode = React.memo(function SelectorNode({ id, data }) {
               {label === "Email" && (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-purple-500"
+                  className="h-6 w-6"
+                  fill="#374151"               // Neutral dark gray
                   viewBox="0 0 24 24"
-                  fill="currentColor"
                 >
                   <path d="M20 4H4C2.897 4 2 4.897 2 6v12c0 1.103.897 2 2 2h16c1.103 0 2-0.897 2-2V6c0-1.103-.897-2-2-2zm0 2v.511l-8 5.333-8-5.333V6h16zM4 18V8.489l8 5.333 8-5.333V18H4z" />
                 </svg>
@@ -255,6 +260,7 @@ const SelectorNode = React.memo(function SelectorNode({ id, data }) {
             transition
           "
         >
+          {/* Still using a robot emoji (no fill override) */}
           <span className="text-base">🤖</span>
           <span className="text-sm text-gray-800 dark:text-gray-200">AI Step</span>
         </button>
@@ -287,7 +293,7 @@ const SelectorNode = React.memo(function SelectorNode({ id, data }) {
 
 //
 // ─── FacebookMessageNode ────────────────────────────────────────────────────
-// A blue-bordered “Facebook Send Message” node with Messenger icon, editable area, “Next Step” label, and resize/handles.
+// Messenger icon fill="#0084FF" (official Mess­enger blue)
 //
 const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -388,14 +394,29 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }
 
       {/* Header row: Messenger icon + “Send Message” */}
       <div className="flex items-center space-x-2 mb-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-5 w-5 text-blue-500 flex-shrink-0"
-          fill="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path d="M12.002 2.002C6.475 2.002 2 6.478 2 12.006c0 2.4871.951 4.768 2.504 6.502L4 22l3.51-1.888A9.966 9.966 0 0 0 12.002 22c5.528 0 10.002-4.476 10.002-9.994 0-5.528-4.474-9.994-10.002-9.994Zm-1.174 13.318l-2.257-2.421-4.672 2.393 5.146-5.574 2.257 2.421 4.672-2.393-5.146 5.574Z" />
-        </svg>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  className="h-4 w-4 flex-shrink-0"
+  viewBox="0 0 512 512"
+>
+  <defs>
+    <linearGradient id="messengerBubbleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#FF5E3A" />
+      <stop offset="25%" stopColor="#FF2A68" />
+      <stop offset="50%" stopColor="#A516F0" />
+      <stop offset="100%" stopColor="#0078FF" />
+    </linearGradient>
+  </defs>
+  <path
+    fill="url(#messengerBubbleGradient)"
+    d="M512 256c0 141.4-114.6 256-256 256-45.9 0-89.7-12.2-127.9-35.1l-93.3 31 31-93.3C12.2 345.7 0 301.9 0 256 0 114.6 114.6 0 256 0s256 114.6 256 256z"
+  />
+  <path
+    fill="#FFFFFF"
+    d="M273.9 179.4l-63.4 90.6-41.8-47.3c-3.6-4.1-9.8-4.6-13.9-1-4.1 3.6-4.6 9.8-1 13.9l54.8 62.1c2 2.2 5.1 3.2 8 .8l71.3-101.9c3.1-4.5 1.7-11-3-14.1-4.7-3.2-11.2-1.7-14.1 3z"
+  />
+</svg>
+
         <span className="text-base font-medium text-gray-800 dark:text-gray-200">
           Send Message
         </span>
@@ -464,7 +485,7 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }
 
 //
 // ─── InstagramMessageNode ───────────────────────────────────────────────────
-// A pink/orange‐bordered “Instagram Send Message” node with camera icon, editable area, “Next Step” label, and handles.
+// Camera icon fill="#E4405F" (Instagram’s “official” solid pink/red)
 //
 const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -565,14 +586,26 @@ const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data
 
       {/* Header row: Instagram camera icon + “Send Message” */}
       <div className="flex items-center space-x-2 mb-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-5 w-5 text-pink-500 flex-shrink-0"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d="M7.75 2C5.4 2 3.18 3.4 2 5.75v12.5C3.18 20.6 5.4 22 7.75 22h8.5c2.35 0 4.57-1.4 5.75-3.75V5.75C20.8 3.4 18.6 2 16.25 2h-8.5ZM12 7.2a4.8 4.8 0 1 1 0 9.6 4.8 4.8 0 0 1 0-9.6Zm5.3-.25a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z" />
-        </svg>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+            >
+              <defs>
+                <linearGradient id="instagramGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#F58529" />    {/* yellow-orange */}
+                  <stop offset="50%" stopColor="#DD2A7B" />   {/* magenta */}
+                  <stop offset="75%" stopColor="#8134AF" />   {/* purple */}
+                  <stop offset="100%" stopColor="#515BD4" />  {/* blue */}
+                </linearGradient>
+              </defs>
+
+              <path
+                fill="url(#instagramGradient)"
+                d="M7.75 2C5.402 2 3.182 3.402 2 5.75v12.5C3.182 20.598 5.402 22 7.75 22h8.5c2.348 0 4.568-1.402 5.75-3.75V5.75C20.568 3.402 18.348 2 15.999 2h-8.25Zm4.249 3.2a4.8 4.8 0 1 1 0 9.6 4.8 4.8 0 0 1 0-9.6Zm5.3-0.25a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z"
+              />
+            </svg>
+
         <span className="text-base font-medium text-gray-800 dark:text-gray-200">
           Send Message
         </span>
@@ -641,7 +674,7 @@ const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data
 
 //
 // ─── TelegramMessageNode ───────────────────────────────────────────────────
-// A teal‐bordered “Telegram Send Message” node with paper‐plane icon.
+// Paper-plane icon fill="#37AEE2" (Telegram’s official blue)
 //
 const TelegramMessageNode = React.memo(function TelegramMessageNode({ id, data }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -744,9 +777,9 @@ const TelegramMessageNode = React.memo(function TelegramMessageNode({ id, data }
       <div className="flex items-center space-x-2 mb-2">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="h-5 w-5 text-blue-400 flex-shrink-0"
+          className="h-4 w-4 flex-shrink-0"
+          fill="#37AEE2"               // Telegram official blue
           viewBox="0 0 24 24"
-          fill="currentColor"
         >
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.02 7.35l-1.72 8.5c-.13.62-.48.77-.97.48L9.3 14.2l-1.8 1.73c-.16.16-.29.29-.64.29l.24-3.53 6.5-5.88c.28-.25-.06-.39-.22-.25L7.3 12.14l-3.08-.96c-.68-.21-.69-.67.14-1.01l11.66-4.47c.56-.21 1.06.15.88 1.01z" />
         </svg>
@@ -818,7 +851,7 @@ const TelegramMessageNode = React.memo(function TelegramMessageNode({ id, data }
 
 //
 // ─── SMSMessageNode ────────────────────────────────────────────────────────
-// A green‐bordered “SMS Send Message” node with phone icon.
+// Phone icon fill="#34D399"  (generic “message bubble” green)
 //
 const SMSMessageNode = React.memo(function SMSMessageNode({ id, data }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -921,9 +954,9 @@ const SMSMessageNode = React.memo(function SMSMessageNode({ id, data }) {
       <div className="flex items-center space-x-2 mb-2">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="h-5 w-5 text-green-500 flex-shrink-0"
+          className="h-4 w-4 flex-shrink-0"
+          fill="#34D399"               // SMS “bubble” green
           viewBox="0 0 24 24"
-          fill="currentColor"
         >
           <path d="M6.62 10.79a15.053 15.053 0 0 0 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1v3.5c0 .55-.45 1-1 1C9.16 21.5 2.5 14.84 2.5 6c0-.55.45-1 1-1H7c.55 0 1 .45 1 1 0 1.24.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
         </svg>
@@ -995,7 +1028,7 @@ const SMSMessageNode = React.memo(function SMSMessageNode({ id, data }) {
 
 //
 // ─── EmailMessageNode ───────────────────────────────────────────────────────
-// A purple‐bordered “Email Send Message” node with envelope icon.
+// Envelope icon fill="#374151" (neutral dark gray)
 //
 const EmailMessageNode = React.memo(function EmailMessageNode({ id, data }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -1098,9 +1131,9 @@ const EmailMessageNode = React.memo(function EmailMessageNode({ id, data }) {
       <div className="flex items-center space-x-2 mb-2">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="h-5 w-5 text-purple-500 flex-shrink-0"
+          className="h-4 w-4 flex-shrink-0"
+          fill="#374151"               // Neutral dark gray
           viewBox="0 0 24 24"
-          fill="currentColor"
         >
           <path d="M20 4H4C2.897 4 2 4.897 2 6v12c0 1.103.897 2 2 2h16c1.103 0 2-0.897 2-2V6c0-1.103-.897-2-2-2zm0 2v.511l-8 5.333-8-5.333V6h16zM4 18V8.489l8 5.333 8-5.333V18H4z" />
         </svg>
@@ -1172,7 +1205,7 @@ const EmailMessageNode = React.memo(function EmailMessageNode({ id, data }) {
 
 //
 // ─── AIModuleNode ───────────────────────────────────────────────────────────
-// A simple generic editable node for AI, Actions, Condition, Randomizer, Smart Delay, etc.
+// (no icon here; generic “click to add message”)
 //
 const AIModuleNode = React.memo(function AIModuleNode({ id, data }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -1544,11 +1577,11 @@ export default function AutomationFlow() {
               nodeColor={(node) => {
                 if (node.type === "trigger") return "#34D399";
                 if (node.type === "selector") return "#9CA3AF";
-                if (node.type === "facebook") return "#3B82F6";
-                if (node.type === "instagram") return "#EC4899";
-                if (node.type === "telegram") return "#22D3EE";
-                if (node.type === "sms") return "#10B981";
-                if (node.type === "email") return "#A78BFA";
+                if (node.type === "facebook") return "#0084FF";
+                if (node.type === "instagram") return "#E4405F";
+                if (node.type === "telegram") return "#37AEE2";
+                if (node.type === "sms") return "#34D399";
+                if (node.type === "email") return "#374151";
                 return "#6366F1";
               }}
             />
