@@ -1,6 +1,7 @@
 // File: components/LiveChatContent.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
+  FaFacebookMessenger,
   FaCommentDots,
   FaFilter,
   FaSort,
@@ -11,65 +12,63 @@ export default function LiveChatContent() {
   //
   // ─── STATE ───────────────────────────────────────────────────────────────────
   //
-  // Each conversation: { id, name, avatar, lastMessage, lastTime, history: [ ... ] }
+  // Conversations list: an array of objects like:
+  // { id, name, avatar, channel, lastMessage, lastTime, history: [ ... ] }
   const [conversations, setConversations] = useState([]);
 
-  // Currently selected conversation or null
+  // Currently selected conversation (object from `conversations`) or null
   const [selectedConversation, setSelectedConversation] = useState(null);
 
-  // Tabs: "reply" or "note"
+  // Which tab is active in the right pane: "reply" or "note"
   const [activeTab, setActiveTab] = useState("reply");
   const [replyText, setReplyText] = useState("");
   const [noteText, setNoteText] = useState("");
 
-  // Inline validation messages
-  const [replyError, setReplyError] = useState("");
-  const [noteError, setNoteError] = useState("");
-
   //
   // ─── HELPERS ─────────────────────────────────────────────────────────────────
   //
-  // Ensure a conversation exists for a given user (fromName); create if missing.
-  const addConversationIfMissing = (fromName, fromAvatar) => {
-    const existing = conversations.find((c) => c.name === fromName);
+  // Given a user‐name (fromName) and channel (e.g. "Facebook"), add a conversation
+  // entry to `conversations` if it doesn't already exist. Returns the new or existing object.
+  const addConversationIfMissing = (fromName, fromAvatar, channel) => {
+    // Check if conversation already exists (by name + channel)
+    const existing = conversations.find(
+      (c) => c.name === fromName && c.channel === channel
+    );
     if (existing) return existing;
 
-    const nowStr = new Date().toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
+    // Otherwise, create a new conversation object
     const newConv = {
-      id: Date.now().toString(),
+      id: Date.now().toString(), // simple unique ID
       name: fromName,
       avatar: fromAvatar,
-      lastMessage: "",
-      lastTime: nowStr,
-      history: [],
+      channel: channel,
+      lastMessage: "", // will be updated once we append to history
+      lastTime: "", // same
+      history: [], // array of { id, from: "them"|"me"|"note", text, time }
     };
 
     setConversations((prev) => [...prev, newConv]);
     return newConv;
   };
 
-  // Handle an incoming “user → chatbot” message
-  const handleIncomingMessage = (fromName, fromAvatar, messageText) => {
-    const convObj = addConversationIfMissing(fromName, fromAvatar);
+  // Given a conversation object and a new incoming message (from the user),
+  // append that message to the conversation’s history and update lastMessage/lastTime,
+  // then select that conversation in the right pane.
+  const handleIncomingMessage = (fromName, fromAvatar, channel, messageText) => {
+    const convObj = addConversationIfMissing(fromName, fromAvatar, channel);
 
-    const nowStr = new Date().toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
+    // Find up‐to‐date object from state
     setConversations((prevConvs) =>
       prevConvs.map((c) => {
         if (c.id === convObj.id) {
+          // Append a new message to history
+          const nowStr = new Date().toLocaleString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
           return {
             ...c,
             lastMessage: messageText,
@@ -89,22 +88,17 @@ export default function LiveChatContent() {
       })
     );
 
+    // Now select this conversation in the UI
     setSelectedConversation((prev) => {
-      const updated = conversations.find((c) => c.name === fromName);
-      return updated
-        ? updated
-        : { ...convObj, lastMessage: messageText, lastTime: nowStr };
+      // Because setConversations is async, find the updated object by ID
+      const updated = conversations.find((c) => c.name === fromName && c.channel === channel);
+      return updated || { ...convObj, lastMessage: messageText, lastTime: new Date().toLocaleString() };
     });
   };
 
-  // When you (the agent) send a reply, validate and append it
+  // When YOU send a reply (in the Reply tab), append that to the current conversation
   const handleSendReply = () => {
-    // Trim whitespace to check if user actually typed something
-    if (!replyText.trim()) {
-      setReplyError("Reply cannot be empty.");
-      return;
-    }
-    setReplyError("");
+    if (!selectedConversation || replyText.trim() === "") return;
 
     const nowStr = new Date().toLocaleString("en-GB", {
       day: "2-digit",
@@ -116,7 +110,7 @@ export default function LiveChatContent() {
     const replyMsgObj = {
       id: Date.now().toString(),
       from: "me",
-      text: replyText.trim(),
+      text: replyText,
       time: nowStr,
     };
 
@@ -125,7 +119,7 @@ export default function LiveChatContent() {
         if (c.id === selectedConversation.id) {
           return {
             ...c,
-            lastMessage: replyText.trim(),
+            lastMessage: replyText,
             lastTime: nowStr,
             history: [...c.history, replyMsgObj],
           };
@@ -134,17 +128,13 @@ export default function LiveChatContent() {
       })
     );
 
-    // Clear input and keep conversation selected
+    // Clear input, keep conversation selected
     setReplyText("");
   };
 
-  // When you (the agent) save a note, validate and append it
+  // When YOU add a note (in the Note tab), append that to the current conversation
   const handleSaveNote = () => {
-    if (!noteText.trim()) {
-      setNoteError("Note cannot be empty.");
-      return;
-    }
-    setNoteError("");
+    if (!selectedConversation || noteText.trim() === "") return;
 
     const nowStr = new Date().toLocaleString("en-GB", {
       day: "2-digit",
@@ -156,7 +146,7 @@ export default function LiveChatContent() {
     const noteMsgObj = {
       id: Date.now().toString(),
       from: "note",
-      text: noteText.trim(),
+      text: noteText,
       time: nowStr,
     };
 
@@ -165,6 +155,7 @@ export default function LiveChatContent() {
         if (c.id === selectedConversation.id) {
           return {
             ...c,
+            // Note does not count as lastMessage; keep previous lastMessage/lastTime
             history: [...c.history, noteMsgObj],
           };
         }
@@ -176,20 +167,23 @@ export default function LiveChatContent() {
   };
 
   //
-  // ─── DEMO: SIMULATE INCOMING MESSAGE AFTER 2 SECONDS ────────────────────────
+  // ─── DEMO: SIMULATE AN INCOMING MESSAGE AFTER 2 SECONDS ─────────────────────
   //
-  // In production, remove this and call handleIncomingMessage(...) from your real API/WebSocket.
+  // Remove this useEffect in production; it’s only here to show how
+  // handleIncomingMessage(...) will automatically create a new conversation
+  // item and display it in the right pane.
   useEffect(() => {
     const demoTimer = setTimeout(() => {
       handleIncomingMessage(
-        "Visitor",
-        "https://via.placeholder.com/40", // placeholder avatar
-        "Hello! I have a question about pricing."
+        "Jane Doe", // incoming user name
+        "https://via.placeholder.com/40", // avatar URL
+        "Facebook",
+        "Hi, I just landed here. Can you help me?"
       );
     }, 2000);
 
     return () => clearTimeout(demoTimer);
-  }, []);
+  }, []); // run once on mount
 
   //
   // ─── RENDER ─────────────────────────────────────────────────────────────────
@@ -262,6 +256,10 @@ export default function LiveChatContent() {
               <li className="flex items-center space-x-2 px-2 py-1 hover:bg-gray-100 rounded">
                 <FaCommentDots className="text-gray-500" />
                 <span className="text-sm">All channels</span>
+              </li>
+              <li className="flex items-center space-x-2 px-2 py-1 hover:bg-gray-100 rounded">
+                <FaFacebookMessenger className="text-blue-500" />
+                <span className="text-sm">Facebook</span>
               </li>
             </ul>
           </div>
@@ -339,7 +337,10 @@ export default function LiveChatContent() {
                 <div className="text-lg font-semibold text-gray-800">
                   {selectedConversation.name}
                 </div>
-                {/* No channel displayed here */}
+                <div className="flex items-center space-x-2 text-xs text-gray-500">
+                  <FaFacebookMessenger />
+                  <span>{selectedConversation.channel}</span>
+                </div>
               </div>
             </div>
           ) : (
@@ -416,11 +417,7 @@ export default function LiveChatContent() {
             {/* Tabs */}
             <div className="flex space-x-6 mb-4">
               <button
-                onClick={() => {
-                  setActiveTab("reply");
-                  setReplyError("");
-                  setNoteError("");
-                }}
+                onClick={() => setActiveTab("reply")}
                 className={`pb-2 text-sm font-semibold ${
                   activeTab === "reply"
                     ? "border-b-2 border-blue-500 text-gray-800"
@@ -430,11 +427,7 @@ export default function LiveChatContent() {
                 Reply
               </button>
               <button
-                onClick={() => {
-                  setActiveTab("note");
-                  setReplyError("");
-                  setNoteError("");
-                }}
+                onClick={() => setActiveTab("note")}
                 className={`pb-2 text-sm font-semibold ${
                   activeTab === "note"
                     ? "border-b-2 border-blue-500 text-gray-800"
@@ -447,62 +440,36 @@ export default function LiveChatContent() {
 
             {/* Input area */}
             {activeTab === "reply" ? (
-              <div className="flex flex-col space-y-2">
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    placeholder="Type your reply..."
-                    className="flex-1 border border-gray-300 rounded-l-lg px-3 py-2 focus:outline-none"
-                    value={replyText}
-                    onChange={(e) => {
-                      setReplyText(e.target.value);
-                      if (e.target.value.trim()) setReplyError("");
-                    }}
-                  />
-                  <button
-                    onClick={handleSendReply}
-                    disabled={!replyText.trim()}
-                    className={`px-4 rounded-r-lg text-white ${
-                      replyText.trim()
-                        ? "bg-blue-500 hover:bg-blue-600"
-                        : "bg-gray-300 cursor-not-allowed"
-                    }`}
-                  >
-                    Send
-                  </button>
-                </div>
-                {replyError && (
-                  <span className="text-xs text-red-500">{replyError}</span>
-                )}
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  placeholder="Type your reply..."
+                  className="flex-1 border border-gray-300 rounded-l-lg px-3 py-2 focus:outline-none"
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                />
+                <button
+                  onClick={handleSendReply}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 rounded-r-lg"
+                >
+                  Send
+                </button>
               </div>
             ) : (
-              <div className="flex flex-col space-y-2">
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    placeholder="Add a note..."
-                    className="flex-1 border border-gray-300 rounded-l-lg px-3 py-2 focus:outline-none"
-                    value={noteText}
-                    onChange={(e) => {
-                      setNoteText(e.target.value);
-                      if (e.target.value.trim()) setNoteError("");
-                    }}
-                  />
-                  <button
-                    onClick={handleSaveNote}
-                    disabled={!noteText.trim()}
-                    className={`px-4 rounded-r-lg text-white ${
-                      noteText.trim()
-                        ? "bg-yellow-400 hover:bg-yellow-500"
-                        : "bg-gray-300 cursor-not-allowed"
-                    }`}
-                  >
-                    Save
-                  </button>
-                </div>
-                {noteError && (
-                  <span className="text-xs text-red-500">{noteError}</span>
-                )}
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  placeholder="Add a note..."
+                  className="flex-1 border border-gray-300 rounded-l-lg px-3 py-2 focus:outline-none"
+                  value={noteText}
+                  onChange={(e) => setNoteText(e.target.value)}
+                />
+                <button
+                  onClick={handleSaveNote}
+                  className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 rounded-r-lg"
+                >
+                  Save
+                </button>
               </div>
             )}
           </div>
