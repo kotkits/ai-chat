@@ -1,76 +1,117 @@
-// File: components/LiveChatContent.jsx
-import React, { useState, useEffect, useRef } from "react";
-import {
-  FaFacebookMessenger,
-  FaCommentDots,
-  FaFilter,
-  FaSort,
-  FaEllipsisV,
-} from "react-icons/fa";
+// components/LiveChatContent.jsx
 
-export default function LiveChatContent() {
+import React, { useState, useEffect } from "react";
+import { FaCommentDots, FaFilter, FaSort, FaEllipsisV } from "react-icons/fa";
+import { useSession, signIn } from "next-auth/react";
+
+export default function LiveChatContent({ onIncoming }) {
+  const { data: session, status } = useSession();
+
   //
   // ─── STATE ───────────────────────────────────────────────────────────────────
   //
-  // Conversations list: an array of objects like:
-  // { id, name, avatar, channel, lastMessage, lastTime, history: [ ... ] }
+  // Conversations: { id, owner, name, avatar, channel, lastMessage, lastTime, history }
   const [conversations, setConversations] = useState([]);
-
-  // Currently selected conversation (object from `conversations`) or null
   const [selectedConversation, setSelectedConversation] = useState(null);
-
-  // Which tab is active in the right pane: "reply" or "note"
   const [activeTab, setActiveTab] = useState("reply");
   const [replyText, setReplyText] = useState("");
   const [noteText, setNoteText] = useState("");
 
   //
+  // ─── AUTH ─────────────────────────────────────────────────────────────────────
+  //
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      signIn();
+    }
+  }, [status]);
+
+  //
+  // ─── FETCH CONVERSATIONS ──────────────────────────────────────────────────────
+  //
+  useEffect(() => {
+    if (status !== "authenticated") return;
+
+    async function fetchConversations() {
+      try {
+        const isAdmin = session.user.name === "admin";
+        let url = "/api/conversations";
+        if (!isAdmin) {
+          const username = encodeURIComponent(session.user.name);
+          url += `?username=${username}`;
+        }
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Error ${res.status}`);
+        const data = await res.json();
+        setConversations(
+          data.map((c) => ({
+            id: c._id,
+            owner: c.owner,
+            name: c.name,
+            avatar: c.avatar,
+            channel: c.channel,       // website URL
+            lastMessage: c.lastMessage,
+            lastTime: c.lastTime,
+            history: c.history || [],
+          }))
+        );
+      } catch {
+        console.warn("Could not load conversations; starting empty.");
+        setConversations([]);
+      }
+    }
+
+    fetchConversations();
+  }, [status, session]);
+
+  //
   // ─── HELPERS ─────────────────────────────────────────────────────────────────
   //
-  // Given a user‐name (fromName) and channel (e.g. "Facebook"), add a conversation
-  // entry to `conversations` if it doesn't already exist. Returns the new or existing object.
   const addConversationIfMissing = (fromName, fromAvatar, channel) => {
-    // Check if conversation already exists (by name + channel)
+    const username = session.user.name;
     const existing = conversations.find(
-      (c) => c.name === fromName && c.channel === channel
+      (c) =>
+        c.name === fromName &&
+        c.channel === channel &&
+        (session.user.name === "admin" ? true : c.owner === username)
     );
     if (existing) return existing;
 
-    // Otherwise, create a new conversation object
     const newConv = {
-      id: Date.now().toString(), // simple unique ID
+      id: Date.now().toString(),
+      owner: username,
       name: fromName,
       avatar: fromAvatar,
-      channel: channel,
-      lastMessage: "", // will be updated once we append to history
-      lastTime: "", // same
-      history: [], // array of { id, from: "them"|"me"|"note", text, time }
+      channel,
+      lastMessage: "",
+      lastTime: "",
+      history: [],
     };
 
     setConversations((prev) => [...prev, newConv]);
     return newConv;
   };
 
-  // Given a conversation object and a new incoming message (from the user),
-  // append that message to the conversation’s history and update lastMessage/lastTime,
-  // then select that conversation in the right pane.
+  // Called whenever a new incoming message arrives.
+  // Update “channel” (current website) and notify parent via onIncoming(...)
   const handleIncomingMessage = (fromName, fromAvatar, channel, messageText) => {
+    if (status !== "authenticated") return;
     const convObj = addConversationIfMissing(fromName, fromAvatar, channel);
 
-    // Find up‐to‐date object from state
+    const nowStr = new Date().toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
     setConversations((prevConvs) =>
       prevConvs.map((c) => {
         if (c.id === convObj.id) {
-          // Append a new message to history
-          const nowStr = new Date().toLocaleString("en-GB", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          });
           return {
             ...c,
+            channel,
             lastMessage: messageText,
             lastTime: nowStr,
             history: [
@@ -88,15 +129,35 @@ export default function LiveChatContent() {
       })
     );
 
-    // Now select this conversation in the UI
-    setSelectedConversation((prev) => {
-      // Because setConversations is async, find the updated object by ID
-      const updated = conversations.find((c) => c.name === fromName && c.channel === channel);
-      return updated || { ...convObj, lastMessage: messageText, lastTime: new Date().toLocaleString() };
+    setSelectedConversation({
+      ...convObj,
+      channel,
+      lastMessage: messageText,
+      lastTime: nowStr,
+      history: [
+        ...convObj.history,
+        {
+          id: Date.now().toString(),
+          from: "them",
+          text: messageText,
+          time: nowStr,
+        },
+      ],
     });
+
+    // Notify parent: new incoming chat on website “channel”
+    if (typeof onIncoming === "function") {
+      onIncoming({
+        id: convObj.id,
+        name: fromName,
+        avatar: fromAvatar,
+        channel,           // the website URL
+        messageText,
+        timestamp: nowStr,
+      });
+    }
   };
 
-  // When YOU send a reply (in the Reply tab), append that to the current conversation
   const handleSendReply = () => {
     if (!selectedConversation || replyText.trim() === "") return;
 
@@ -128,11 +189,18 @@ export default function LiveChatContent() {
       })
     );
 
-    // Clear input, keep conversation selected
+    setSelectedConversation((prev) =>
+      prev && {
+        ...prev,
+        lastMessage: replyText,
+        lastTime: nowStr,
+        history: [...prev.history, replyMsgObj],
+      }
+    );
+
     setReplyText("");
   };
 
-  // When YOU add a note (in the Note tab), append that to the current conversation
   const handleSaveNote = () => {
     if (!selectedConversation || noteText.trim() === "") return;
 
@@ -155,7 +223,6 @@ export default function LiveChatContent() {
         if (c.id === selectedConversation.id) {
           return {
             ...c,
-            // Note does not count as lastMessage; keep previous lastMessage/lastTime
             history: [...c.history, noteMsgObj],
           };
         }
@@ -163,39 +230,41 @@ export default function LiveChatContent() {
       })
     );
 
+    setSelectedConversation((prev) =>
+      prev && { ...prev, history: [...prev.history, noteMsgObj] }
+    );
+
     setNoteText("");
   };
 
   //
-  // ─── DEMO: SIMULATE AN INCOMING MESSAGE AFTER 2 SECONDS ─────────────────────
-  //
-  // Remove this useEffect in production; it’s only here to show how
-  // handleIncomingMessage(...) will automatically create a new conversation
-  // item and display it in the right pane.
-  useEffect(() => {
-    const demoTimer = setTimeout(() => {
-      handleIncomingMessage(
-        "Jane Doe", // incoming user name
-        "https://via.placeholder.com/40", // avatar URL
-        "Facebook",
-        "Hi, I just landed here. Can you help me?"
-      );
-    }, 2000);
-
-    return () => clearTimeout(demoTimer);
-  }, []); // run once on mount
-
-  //
   // ─── RENDER ─────────────────────────────────────────────────────────────────
   //
+  if (status === "loading") {
+    return (
+      <div className="text-center py-20 text-gray-500">
+        Checking authentication…
+      </div>
+    );
+  }
+  if (status === "unauthenticated") {
+    return null;
+  }
+
+  const isAdmin = session.user.name === "admin";
+
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-full bg-gray-50">
       {/* ────────── Left Sidebar ────────── */}
-      <aside className="w-1/4 border-r bg-white flex flex-col">
+      <aside className="w-1/3 border-r bg-white flex flex-col">
         <div className="p-4 border-b">
           <h2 className="text-2xl font-bold text-[#1A202C]">Live Chat</h2>
+          {isAdmin && (
+            <div className="mt-2 text-sm text-gray-600">
+              (Admin: see all users’ websites)
+            </div>
+          )}
         </div>
-
         <div className="flex-1 overflow-y-auto">
           {/* Conversations Header */}
           <div className="p-4">
@@ -203,36 +272,30 @@ export default function LiveChatContent() {
               Conversations
             </div>
             <ul className="space-y-1">
-              <li className="flex items-center justify-between px-2 py-1 hover:bg-gray-100 rounded">
-                <div className="flex items-center space-x-2">
-                  <FaCommentDots className="text-gray-500" />
-                  <span className="text-sm">Unassigned</span>
-                </div>
-                <span className="text-xs bg-gray-200 text-gray-600 rounded-full px-2">
-                  0
-                </span>
-              </li>
-
-              <li className="flex items-center justify-between px-2 py-1 hover:bg-gray-100 rounded">
-                <div className="flex items-center space-x-2">
-                  <FaCommentDots className="text-gray-500" />
-                  <span className="text-sm">You</span>
-                </div>
-                <span className="text-xs bg-blue-100 text-blue-600 rounded-full px-2">
-                  {conversations.filter((c) => c.assignedTo === "you").length}
-                </span>
-              </li>
-
-              <li className="flex items-center justify-between px-2 py-1 hover:bg-gray-100 rounded">
-                <div className="flex items-center space-x-2">
-                  <FaCommentDots className="text-gray-500" />
-                  <span className="text-sm">Team</span>
-                </div>
-                <span className="text-xs bg-gray-200 text-gray-600 rounded-full px-2">
-                  {conversations.filter((c) => c.assignedTo === "team").length}
-                </span>
-              </li>
-
+              {!isAdmin && (
+                <>
+                  <li className="flex items-center justify-between px-2 py-1 hover:bg-gray-100 rounded">
+                    <div className="flex items-center space-x-2">
+                      <FaCommentDots className="text-gray-500" />
+                      <span className="text-sm">You</span>
+                    </div>
+                    <span className="text-xs bg-blue-100 text-blue-600 rounded-full px-2">
+                      {conversations.filter(
+                        (c) => c.owner === session.user.name
+                      ).length}
+                    </span>
+                  </li>
+                  <li className="flex items-center justify-between px-2 py-1 hover:bg-gray-100 rounded">
+                    <div className="flex items-center space-x-2">
+                      <FaCommentDots className="text-gray-500" />
+                      <span className="text-sm">Team</span>
+                    </div>
+                    <span className="text-xs bg-gray-200 text-gray-600 rounded-full px-2">
+                      {conversations.length}
+                    </span>
+                  </li>
+                </>
+              )}
               <li className="flex items-center justify-between px-2 py-1 bg-gray-100 rounded">
                 <div className="flex items-center space-x-2">
                   <FaCommentDots className="text-gray-700" />
@@ -247,7 +310,7 @@ export default function LiveChatContent() {
             </ul>
           </div>
 
-          {/* Channels */}
+          {/* Channels (websites) */}
           <div className="px-4">
             <div className="text-sm font-semibold text-gray-700 mb-2">
               Channels
@@ -255,19 +318,15 @@ export default function LiveChatContent() {
             <ul className="space-y-1">
               <li className="flex items-center space-x-2 px-2 py-1 hover:bg-gray-100 rounded">
                 <FaCommentDots className="text-gray-500" />
-                <span className="text-sm">All channels</span>
-              </li>
-              <li className="flex items-center space-x-2 px-2 py-1 hover:bg-gray-100 rounded">
-                <FaFacebookMessenger className="text-blue-500" />
-                <span className="text-sm">Facebook</span>
+                <span className="text-sm">All websites</span>
               </li>
             </ul>
           </div>
         </div>
       </aside>
 
-      {/* ────────── Middle Conversation List ────────── */}
-      <div className="w-1/4 border-r bg-white flex flex-col">
+      {/* ────────── Middle Conversations List ────────── */}
+      <div className="w-1/3 border-r bg-white flex flex-col">
         <div className="flex items-center justify-between p-4 border-b">
           <div className="flex items-center space-x-1">
             <span className="text-sm font-semibold text-gray-700">All Open</span>
@@ -286,7 +345,6 @@ export default function LiveChatContent() {
         </div>
 
         {conversations.length === 0 ? (
-          // Placeholder when no conversations exist yet
           <div className="flex-1 flex items-center justify-center text-gray-500">
             No conversations yet
           </div>
@@ -307,9 +365,16 @@ export default function LiveChatContent() {
                 />
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-800">
-                      {conv.name}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-gray-800">
+                        {conv.name}
+                      </span>
+                      {isAdmin && (
+                        <span className="text-xs text-gray-500">
+                          (User: {conv.owner})
+                        </span>
+                      )}
+                    </div>
                     <span className="text-xs text-gray-500">{conv.lastTime}</span>
                   </div>
                   <div className="text-xs text-gray-600 truncate">
@@ -323,7 +388,7 @@ export default function LiveChatContent() {
       </div>
 
       {/* ────────── Right Chat Detail Pane ────────── */}
-      <div className="flex-1 flex flex-col bg-white">
+      <div className="w-1/3 flex flex-col bg-white">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
           {selectedConversation ? (
@@ -337,9 +402,13 @@ export default function LiveChatContent() {
                 <div className="text-lg font-semibold text-gray-800">
                   {selectedConversation.name}
                 </div>
-                <div className="flex items-center space-x-2 text-xs text-gray-500">
-                  <FaFacebookMessenger />
-                  <span>{selectedConversation.channel}</span>
+                {isAdmin && (
+                  <div className="text-xs text-gray-500">
+                    Chatting with: {selectedConversation.owner}
+                  </div>
+                )}
+                <div className="text-xs text-gray-500">
+                  Current Website: {selectedConversation.channel}
                 </div>
               </div>
             </div>
@@ -414,7 +483,6 @@ export default function LiveChatContent() {
         {/* Reply / Note tabs + input */}
         {selectedConversation && (
           <div className="border-t px-6 py-4 flex flex-col">
-            {/* Tabs */}
             <div className="flex space-x-6 mb-4">
               <button
                 onClick={() => setActiveTab("reply")}
@@ -438,7 +506,6 @@ export default function LiveChatContent() {
               </button>
             </div>
 
-            {/* Input area */}
             {activeTab === "reply" ? (
               <div className="flex space-x-2">
                 <input

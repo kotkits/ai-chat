@@ -1,3 +1,4 @@
+// HomeContent.jsx
 import React from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
@@ -69,10 +70,10 @@ export default function HomeContent() {
           </p>
           {/* Button added at bottom of Growth Goals */}
           <div className="mt-6">
-            <Link href="/get-started">
-                <button className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-indigo-600 hover:to-purple-500 text-white font-bold px-8 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300 ease-in-out">
-                    🚀 Get Started
-                      </button>
+            <Link href="/automation">
+              <button className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-indigo-600 hover:to-purple-500 text-white font-bold px-8 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300 ease-in-out">
+                🚀 Get Started
+              </button>
             </Link>
           </div>
         </section>

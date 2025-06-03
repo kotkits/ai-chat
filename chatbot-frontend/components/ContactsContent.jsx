@@ -1,32 +1,18 @@
-// File: components/ContactsContent.jsx
-import React, { useState, useRef } from "react";
+// components/ContactsContent.jsx
+
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
-import { FaPlus, FaUpload, FaChevronDown, FaArrowLeft } from "react-icons/fa";
+import { useSession, signIn } from "next-auth/react";
+import { FaPlus, FaUpload, FaTrash } from "react-icons/fa";
 
 export default function ContactsContent() {
   const router = useRouter();
   const fileInputRef = useRef(null);
-
-  // Initial contacts (can be empty or pre‐filled)
-  const [contacts, setContacts] = useState([
-    {
-      id: 1,
-      avatar: "https://via.placeholder.com/40?text=L",
-      name: "littlebothelper",
-      gender: "—",
-      status: "Subscribed",
-      subscribed: "1 year ago",
-    },
-    {
-      id: 2,
-      avatar: "https://via.placeholder.com/40?text=J",
-      name: "Johnny Mnemonic",
-      gender: "Male",
-      status: "Subscribed",
-      subscribed: "2 years ago",
-    },
-  ]);
-
+  const { data: session, status } = useSession();
+  const [contacts, setContacts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");    // General error banner
+  const [formError, setFormError] = useState("");    // Inline form error
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [showForm, setShowForm] = useState(false);
   const [newContact, setNewContact] = useState({
@@ -36,134 +22,254 @@ export default function ContactsContent() {
     status: "",
     subscribed: "",
   });
+  const [importing, setImporting] = useState(false);
 
   const selectedCount = selectedIds.size;
+  const totalCount = contacts.length;
+  const allSelected = totalCount > 0 && selectedCount === totalCount;
 
-  // Toggle a single contact’s selection
+  // Redirect to sign-in if not authenticated
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      signIn();
+    }
+  }, [status]);
+
+  // Fetch contacts for the logged-in user
+  useEffect(() => {
+    if (status !== "authenticated") return;
+
+    async function fetchContacts() {
+      setLoading(true);
+      try {
+        const username = encodeURIComponent(session.user.name);
+        const res = await fetch(`/api/contacts?username=${username}`);
+        if (!res.ok) throw new Error(`Error ${res.status}`);
+        const data = await res.json();
+        setContacts(
+          data.map((c) => ({
+            id: c._id,
+            avatar: c.avatar,
+            name: c.name,
+            gender: c.gender,
+            status: c.status,
+            subscribed: c.subscribed,
+            owner: c.username,
+          }))
+        );
+      } catch {
+        console.warn("Could not load contacts; starting with empty list.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchContacts();
+  }, [status, session]);
+
   const toggleSelection = (id) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
 
-  // Toggle “select all”
   const toggleSelectAll = () => {
-    if (selectedCount === contacts.length) {
+    if (allSelected) {
       setSelectedIds(new Set());
     } else {
       setSelectedIds(new Set(contacts.map((c) => c.id)));
     }
   };
 
-  // Handle form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setNewContact((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Submit new contact form
-  const handleCreateContact = (e) => {
+  const handleCreateContact = async (e) => {
     e.preventDefault();
-    const { avatar, name, gender, status, subscribed } = newContact;
-    if (!name.trim()) return; // Name is required
+    setFormError("");
+    setErrorMsg("");
 
-    const nextId = Date.now();
-    setContacts((prev) => [
-      ...prev,
-      {
-        id: nextId,
-        avatar: avatar.trim() || "https://via.placeholder.com/40?text=?",
-        name: name.trim(),
-        gender: gender.trim() || "—",
-        status: status.trim() || "Subscribed",
-        subscribed: subscribed.trim() || "Just now",
-      },
-    ]);
-    // Reset form & hide
-    setNewContact({ avatar: "", name: "", gender: "", status: "", subscribed: "" });
-    setShowForm(false);
+    if (!newContact.name.trim()) {
+      setFormError("Name is required.");
+      return;
+    }
+
+    const contactToAdd = {
+      avatar: newContact.avatar.trim() || "https://via.placeholder.com/40?text=🤖",
+      name: newContact.name.trim(),
+      gender: newContact.gender.trim() || "—",
+      status: newContact.status.trim() || "Subscribed",
+      subscribed: newContact.subscribed.trim() || "Just now",
+      username: session.user.name,
+    };
+
+    try {
+      const res = await fetch("/api/contacts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(contactToAdd),
+      });
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      const created = await res.json();
+      setContacts((prev) => [
+        ...prev,
+        {
+          id: created._id,
+          avatar: created.avatar,
+          name: created.name,
+          gender: created.gender,
+          status: created.status,
+          subscribed: created.subscribed,
+          owner: created.username,
+        },
+      ]);
+    } catch {
+      const fallbackId = Date.now().toString();
+      setContacts((prev) => [
+        ...prev,
+        { id: fallbackId, ...contactToAdd, owner: contactToAdd.username },
+      ]);
+    } finally {
+      setNewContact({ avatar: "", name: "", gender: "", status: "", subscribed: "" });
+      setShowForm(false);
+    }
   };
 
-  // Trigger file input click
   const handleImportClick = () => {
     fileInputRef.current.click();
   };
 
-  // Parse CSV and append contacts
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const text = evt.target.result;
-      const lines = text.split("\n").map((ln) => ln.trim()).filter((ln) => ln);
-      if (lines.length < 2) return; // no data
-      const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
-      const newEntries = [];
-      for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i].split(",").map((c) => c.trim());
-        if (cols.length !== headers.length) continue;
-        const entry = { id: Date.now() + i };
-        headers.forEach((h, idx) => {
-          entry[h] = cols[idx];
-        });
-        // Ensure required fields
-        newEntries.push({
-          id: entry.id,
-          avatar: entry.avatar || "https://via.placeholder.com/40?text=?",
-          name: entry.name || "Unnamed",
-          gender: entry.gender || "—",
-          status: entry.status || "Subscribed",
-          subscribed: entry.subscribed || "Just now",
-        });
-      }
-      if (newEntries.length) {
-        setContacts((prev) => [...prev, ...newEntries]);
-      }
-    };
-    reader.readAsText(file);
-    // Clear input so same file can be re‐selected if needed
-    e.target.value = "";
+    setImporting(true);
+    setErrorMsg("");
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("username", session.user.name);
+
+    try {
+      const res = await fetch("/api/contacts/import", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      const importedContacts = await res.json();
+      setContacts((prev) => [
+        ...prev,
+        ...importedContacts.map((c) => ({
+          id: c._id,
+          avatar: c.avatar,
+          name: c.name,
+          gender: c.gender,
+          status: c.status,
+          subscribed: c.subscribed,
+          owner: c.username,
+        })),
+      ]);
+    } catch {
+      console.warn("CSV import failed or endpoint missing.");
+    } finally {
+      setImporting(false);
+      e.target.value = "";
+    }
   };
+
+  const handleDeleteSelected = async () => {
+    if (selectedCount === 0) return;
+    setErrorMsg("");
+
+    try {
+      const res = await fetch("/api/contacts/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selectedIds), username: session.user.name }),
+      });
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      setContacts((prev) => prev.filter((c) => !selectedIds.has(c.id)));
+      setSelectedIds(new Set());
+    } catch {
+      setContacts((prev) => prev.filter((c) => !selectedIds.has(c.id)));
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleSingleDelete = async (id) => {
+    try {
+      const res = await fetch(`/api/contacts/${id}?username=${encodeURIComponent(session.user.name)}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      setContacts((prev) => prev.filter((c) => c.id !== id));
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    } catch {
+      setContacts((prev) => prev.filter((c) => c.id !== id));
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
+  };
+
+  if (status === "loading") {
+    return <div className="text-center py-20 text-gray-500">Checking authentication…</div>;
+  }
+  if (status === "unauthenticated") {
+    return null; // signIn() will redirect
+  }
 
   return (
     <div className="p-6">
-      {/* ─── Back Button ─────────────────────────────────────────────────────── */}
-      <button
-        onClick={() => router.back()}
-        className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 mb-4"
-      >
-        <FaArrowLeft />
-        <span className="text-sm font-medium">Back</span>
-      </button>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold text-gray-800">Contacts for {session.user.name}</h1>
+        <button
+          onClick={() => router.push("/")}
+          className="text-sm text-blue-600 hover:underline"
+        >
+          Return to Dashboard
+        </button>
+      </div>
 
-      {/* ─── Page Header ───────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Contacts</h1>
+        <h2 className="text-lg font-medium text-gray-700">
+          Manage your contacts
+        </h2>
         <div className="flex space-x-2">
-          {/* Create New Contact */}
           <button
             type="button"
-            onClick={() => setShowForm((prev) => !prev)}
+            onClick={() => {
+              setShowForm((prev) => !prev);
+              setFormError("");
+            }}
             className="flex items-center space-x-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded-md text-sm"
           >
-            <FaPlus className="text-gray-600" />
-            <span>Create New Contact</span>
+            <FaPlus />
+            <span>{showForm ? "Cancel" : "Add Contact"}</span>
           </button>
-          {/* Import */}
+
           <button
             type="button"
             onClick={handleImportClick}
-            className="flex items-center space-x-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm"
+            disabled={importing}
+            className={`flex items-center space-x-1 px-3 py-1.5 rounded-md text-sm font-medium ${
+              importing
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-blue-500 hover:bg-blue-600 text-white"
+            }`}
           >
-            <FaUpload className="text-white" />
-            <span>Import</span>
+            <FaUpload />
+            <span>{importing ? "Importing…" : "Import CSV"}</span>
           </button>
           <input
             type="file"
@@ -172,10 +278,29 @@ export default function ContactsContent() {
             onChange={handleFileChange}
             className="hidden"
           />
+
+          <button
+            type="button"
+            onClick={handleDeleteSelected}
+            disabled={selectedCount === 0}
+            className={`flex items-center space-x-1 px-3 py-1.5 rounded-md text-sm font-medium ${
+              selectedCount === 0
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-red-500 hover:bg-red-600 text-white"
+            }`}
+          >
+            <FaTrash />
+            <span>Delete Selected</span>
+          </button>
         </div>
       </div>
 
-      {/* ─── New Contact Form (conditionally shown) ─────────────────────────── */}
+      {errorMsg && (
+        <div className="mb-4 rounded-md bg-red-100 px-4 py-3 text-red-700">
+          {errorMsg}
+        </div>
+      )}
+
       {showForm && (
         <form
           onSubmit={handleCreateContact}
@@ -191,10 +316,11 @@ export default function ContactsContent() {
                 name="avatar"
                 value={newContact.avatar}
                 onChange={handleChange}
-                placeholder="https://..."
+                placeholder="https://example.com/avatar.png"
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Name *
@@ -204,36 +330,49 @@ export default function ContactsContent() {
                 name="name"
                 value={newContact.name}
                 onChange={handleChange}
+                placeholder="Enter name"
+                className={`mt-1 block w-full border ${
+                  formError ? "border-red-500" : "border-gray-300"
+                } rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                 required
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               />
+              {formError && (
+                <p className="mt-1 text-xs text-red-600">{formError}</p>
+              )}
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Gender
               </label>
-              <input
-                type="text"
+              <select
                 name="gender"
                 value={newContact.gender}
                 onChange={handleChange}
-                placeholder="Male/Female/—"
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              />
+                className="mt-1 block w-full border-gray-300 bg-white rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              >
+                <option value="">—</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Status
               </label>
-              <input
-                type="text"
+              <select
                 name="status"
                 value={newContact.status}
                 onChange={handleChange}
-                placeholder="Subscribed/Unsubscribed"
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              />
+                className="mt-1 block w-full border-gray-300 bg-white rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              >
+                <option value="Subscribed">Subscribed</option>
+                <option value="Unsubscribed">Unsubscribed</option>
+              </select>
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Subscribed
@@ -247,121 +386,124 @@ export default function ContactsContent() {
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               />
             </div>
-            <div className="flex items-end">
-              <button
-                type="submit"
-                className="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium"
-              >
-                Add Contact
-              </button>
-            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="bg-green-500 hover:bg-green-600 text-white font-semibold px-6 py-2 rounded-md transition"
+            >
+              Save Contact
+            </button>
           </div>
         </form>
       )}
 
-      {/* ─── Conditionally show Subheader only when ≥1 selected ──────────────── */}
-      {selectedCount > 0 && (
-        <div className="flex items-center justify-between mb-3">
-          <div className="text-sm text-gray-600">
-            {selectedCount} selected of {selectedCount}
-          </div>
-          <div>
-            <button
-              type="button"
-              className="flex items-center space-x-1 text-sm font-medium bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-1.5 rounded-md"
-            >
-              <span>Bulk Actions</span>
-              <FaChevronDown className="text-gray-600" />
-            </button>
-          </div>
+      {loading ? (
+        <div className="text-center py-20 text-gray-500">
+          Loading contacts…
         </div>
-      )}
+      ) : (
+        <>
+          {selectedCount > 0 && (
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-sm text-gray-600">
+                {selectedCount} selected of {totalCount} total
+              </div>
+            </div>
+          )}
 
-      {/* ─── Contacts Table ──────────────────────────────────────────────────── */}
-      <div className="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              {/* Select All Checkbox */}
-              <th className="w-12 px-4 py-3 text-left text-sm font-medium text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={
-                    selectedCount === contacts.length && contacts.length > 0
-                  }
-                  onChange={toggleSelectAll}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                Avatar
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                Name
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                Gender
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                Status
-              </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                Subscribed
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 bg-white">
-            {contacts.map((contact) => {
-              const isSelected = selectedIds.has(contact.id);
-              return (
-                <tr
-                  key={contact.id}
-                  className={isSelected ? "bg-blue-50" : ""}
-                >
-                  {/* Row Checkbox */}
-                  <td className="px-4 py-3">
+          <div className="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="w-12 px-4 py-3 text-left text-sm font-medium text-gray-700">
                     <input
                       type="checkbox"
-                      checked={isSelected}
-                      onChange={() => toggleSelection(contact.id)}
+                      checked={allSelected}
+                      onChange={toggleSelectAll}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
-                  </td>
-
-                  {/* Avatar */}
-                  <td className="px-4 py-3">
-                    <img
-                      src={contact.avatar}
-                      alt={contact.name}
-                      className="h-8 w-8 rounded-full object-cover"
-                    />
-                  </td>
-
-                  {/* Name */}
-                  <td className="px-4 py-3 text-sm text-gray-800">
-                    {contact.name}
-                  </td>
-
-                  {/* Gender */}
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {contact.gender}
-                  </td>
-
-                  {/* Status */}
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {contact.status}
-                  </td>
-
-                  {/* Subscribed */}
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {contact.subscribed}
-                  </td>
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                    Avatar
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                    Name
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                    Gender
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                    Subscribed
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                    Actions
+                  </th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody className="divide-y divide-gray-100 bg-white">
+                {contacts.map((contact) => {
+                  const isSelected = selectedIds.has(contact.id);
+                  return (
+                    <tr key={contact.id} className={isSelected ? "bg-blue-50" : ""}>
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelection(contact.id)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <img
+                          src={contact.avatar}
+                          alt={contact.name}
+                          className="h-8 w-8 rounded-full object-cover"
+                        />
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-800">
+                        {contact.name}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {contact.gender}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {contact.status}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {contact.subscribed}
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => handleSingleDelete(contact.id)}
+                          className="text-red-500 hover:text-red-700 text-sm"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+
+                {contacts.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="px-4 py-6 text-center text-gray-500"
+                    >
+                      No contacts found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </div>
   );
 }
