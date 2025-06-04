@@ -1,4 +1,5 @@
 // File: components/AutomationContent.jsx
+
 import React, { useCallback, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import ReactFlow, {
@@ -14,8 +15,8 @@ import "reactflow/dist/style.css";
 
 //
 // ─── TriggerNode ────────────────────────────────────────────────────────────
-// A green‐bordered box with a description and a “+ New Trigger” button.
-// Clicking that button calls data.onAddTrigger(id) to spawn a Selector next to it.
+// A green‐bordered box with header “⚡ When…”, description text, a dashed “+ New Trigger”
+// area, and a right‐side outgoing handle labeled “Then →”.
 //
 const TriggerNode = React.memo(
   function TriggerNode({ id, data }) {
@@ -28,7 +29,7 @@ const TriggerNode = React.memo(
     const startWRef = useRef(data.width);
     const startHRef = useRef(data.height);
 
-    // Start resize
+    // Begin resize
     const onResizeMouseDown = (e) => {
       e.stopPropagation();
       isResizingRef.current = true;
@@ -72,49 +73,59 @@ const TriggerNode = React.memo(
           rounded-lg
           shadow-md
           p-4
-          flex flex-col justify-center items-center text-center
+          flex flex-col
           overflow-hidden
-          cursor-default
         "
       >
         {/* Top handle (incoming) */}
         <Handle
           type="target"
           position="top"
-          id="a"
+          id="in"
           style={{ background: "#34D399", width: 10, height: 10 }}
         />
 
-        {/* Description */}
-        <div className="w-full mb-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400 leading-snug break-words">
-            A Trigger is an event that starts your Automation. Click to add a Trigger.
-          </p>
+        {/* Header row: ⚡ When… */}
+        <div className="flex items-center mb-2">
+          <span className="text-2xl text-green-500 mr-2">⚡</span>
+          <span className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+            When…
+          </span>
         </div>
 
-        {/* + New Trigger button */}
-        <button
-          onClick={() => data.onAddTrigger && data.onAddTrigger(id)}
-          className="
-            w-full h-10
-            border-2 border-dashed border-blue-400
-            rounded-lg
-            flex items-center justify-center
-            text-blue-600 font-semibold text-sm
-            hover:bg-blue-50 dark:hover:bg-gray-700
-            transition
-          "
-        >
-          + New Trigger
-        </button>
+        {/* Description text */}
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 leading-snug">
+          A Trigger is an event that starts your Automation. Click to add a Trigger.
+        </p>
 
-        {/* Bottom handle (outgoing) */}
-        <Handle
-          type="source"
-          position="bottom"
-          id="b"
-          style={{ background: "#34D399", width: 10, height: 10, bottom: "-5px" }}
-        />
+        {/* Dashed “+ New Trigger” box */}
+        <div className="flex-1">
+          <button
+            onClick={() => data.onAddTrigger && data.onAddTrigger(id)}
+            className="
+              w-full h-10
+              border-2 border-dashed border-blue-400
+              rounded-lg
+              flex items-center justify-center
+              text-blue-600 font-semibold text-sm
+              hover:bg-blue-50 dark:hover:bg-gray-700
+              transition
+            "
+          >
+            + New Trigger
+          </button>
+        </div>
+
+                  {/* Right‐side “Next Step →” handle */}
+          <div className="absolute right-[-5px] top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+            <Handle
+              type="source"
+              position="right"
+              id="out"
+              style={{ background: "#E1306C", width: 10, height: 10 }}
+            />
+            <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
+          </div>
 
         {/* Resize handle (tiny green square) */}
         <div
@@ -132,9 +143,11 @@ const TriggerNode = React.memo(
 //
 // ─── SelectorNode ──────────────────────────────────────────────────────────
 // A dashed‐border panel listing all possible “first steps.” Clicking one calls data.onSelect(label).
+// Has a top (incoming) handle and a right (outgoing) handle.
 //
 const SelectorNode = React.memo(function SelectorNode({ id, data }) {
   const nodeRef = useRef(null);
+
   const handlePick = (label) => {
     data.onSelect(label);
   };
@@ -157,6 +170,15 @@ const SelectorNode = React.memo(function SelectorNode({ id, data }) {
         overflow-auto
       "
     >
+      {/* Top handle (incoming) */}
+      <Handle
+        type="target"
+        position="top"
+        id="in"
+        style={{ background: "#9CA3AF", width: 10, height: 10 }}
+      />
+
+      {/* Header */}
       <div className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
         Choose first step 👇
       </div>
@@ -166,7 +188,13 @@ const SelectorNode = React.memo(function SelectorNode({ id, data }) {
         <div className="text-xs text-gray-600 dark:text-gray-400 uppercase font-medium">
           Content
         </div>
-        {["Messenger", "Instagram", "Telegram", "SMS", "Email"].map((label) => (
+        {[
+          { label: "Messenger", color: "#0084FF" },
+          { label: "Instagram", color: "#E4405F" },
+          { label: "Telegram", color: "#37AEE2" },
+          { label: "SMS", color: "#34D399" },
+          { label: "Email", color: "#8B5CF6" },
+        ].map(({ label, color }) => (
           <button
             key={label}
             onClick={() => handlePick(label)}
@@ -178,59 +206,63 @@ const SelectorNode = React.memo(function SelectorNode({ id, data }) {
               transition
             "
           >
-            {/* SVG icons with brand colors */}
-            <span className="flex-shrink-0">
-              {label === "Messenger" && (
+            {label === "Messenger" ? (
+              <div
+                className="h-5 w-5 flex-shrink-0 rounded-full flex items-center justify-center bg-[#0084FF]"
+              ></div>
+            ) : label === "Instagram" ? (
+              <div
+                className="h-5 w-5 flex-shrink-0 rounded-full flex items-center justify-center"
+                style={{
+                  background:
+                    "linear-gradient(45deg, #F58529 0%, #DD2A7B 50%, #8134AF 75%, #515BD4 100%)",
+                }}
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="#0084FF" // Messenger blue
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M12.002 2.002C6.475 2.002 2 6.478 2 12.006c0 2.487.951 4.768 2.504 6.502L4 22l3.51-1.888A9.966 9.966 0 0 0 12.002 22c5.528 0 10-4.476 10-9.994 0-5.528-4.472-9.994-9.998-9.994Zm-1.174 13.318l-2.257-2.421-4.672 2.393 5.146-5.574 2.257 2.421 4.672-2.393-5.146 5.574Z" />
-                </svg>
-              )}
-              {label === "Instagram" && (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="#E4405F" // Instagram pink
+                  className="h-3 w-3 text-white"
                   viewBox="0 0 24 24"
                 >
                   <path d="M7.75 2C5.4 2 3.18 3.4 2 5.75v12.5C3.18 20.6 5.4 22 7.75 22h8.5c2.35 0 4.57-1.4 5.75-3.75V5.75C20.6 3.4 18.4 2 16.25 2h-8.5ZM12 7.2a4.8 4.8 0 1 1 0 9.6 4.8 4.8 0 0 1 0-9.6Zm5.3-.25a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z" />
                 </svg>
-              )}
-              {label === "Telegram" && (
+              </div>
+            ) : label === "Telegram" ? (
+              <div
+                className="h-5 w-5 flex-shrink-0 rounded-full flex items-center justify-center bg-[#37AEE2]"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="#37AEE2" // Telegram blue
+                  className="h-3 w-3 text-white"
                   viewBox="0 0 24 24"
                 >
                   <path d="M12 2C6.48 2 2 6.48 2 12c0 4.418 2.86 8.166 6.844 9.5L12 22l3.156-.5C19.14 20.16 22 16.418 22 12c0-5.52-4.48-10-10-10Zm4.825 7.2l-1.9 9.07c-.143.61-.52.76-1.05.47l-2.9-2.14-1.4 1.35c-.155.155-.285.285-.585.285l.21-3.03 6.52-4.96c.24-.21-.05-.33-.37-.12l-6.82 4.28-2.94-.92c-.64-.195-.65-.64.13-.95l11.66-4.47c.56-.21 1.06.15.88 1.01Z" />
                 </svg>
-              )}
-              {label === "SMS" && (
+              </div>
+            ) : label === "SMS" ? (
+              <div
+                className="h-5 w-5 flex-shrink-0 rounded-full flex items-center justify-center bg-[#34D399]"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="#34D399" // SMS green
+                  className="h-3 w-3 text-white"
                   viewBox="0 0 24 24"
                 >
                   <path d="M20 2H4C2.897 2 2 2.897 2 4v16l4-4h14c1.103 0 2-.897 2-2V4C22 2.897 21.103 2 20 2z" />
                 </svg>
-              )}
-              {label === "Email" && (
+              </div>
+            ) : (
+              <div
+                className="h-5 w-5 flex-shrink-0 rounded-full flex items-center justify-center bg-[#8B5CF6]"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="#374151" // Email gray
+                  className="h-3 w-3 text-white"
                   viewBox="0 0 24 24"
                 >
-                  <path d="M20 4H4C2.897 4 2 4.897 2 6v12c0 1.103.897 2 2 2h16c1.103 0 2-.897 2-2V6c0-1.103-.897-2-2-2zm0 2v.511l-8 5.333-8-5.333V6h16zM4 18V8.489l8 5.333 8-5.333V18H4z" />
+                  <path d="M20 4H4C2.897 4 2 4.897 2 6v12c0 1.103.897 2 2 2h16c1.103 0 2-0.897 2-2V6c0-1.103-.897-2-2-2zm0 2v.511l-8 5.333-8-5.333V6h16zM4 18V8.489l8 5.333 8-5.333V18H4z" />
                 </svg>
-              )}
-            </span>
+              </div>
+            )}
             <span className="text-sm text-gray-800 dark:text-gray-200">{label}</span>
           </button>
         ))}
@@ -251,7 +283,9 @@ const SelectorNode = React.memo(function SelectorNode({ id, data }) {
             transition
           "
         >
-          <span className="text-base">🤖</span>
+          <span className="h-5 w-5 flex items-center justify-center rounded-full bg-[#6366F1] text-white text-xs">
+            🤖
+          </span>
           <span className="text-sm text-gray-800 dark:text-gray-200">AI Step</span>
         </button>
       </div>
@@ -261,29 +295,50 @@ const SelectorNode = React.memo(function SelectorNode({ id, data }) {
         <div className="text-xs text-gray-600 dark:text-gray-400 uppercase font-medium">
           Logic
         </div>
-        {["Actions", "Condition", "Randomizer", "Smart Delay"].map((label) => (
+        {[ 
+          { label: "Actions", color: "#F59E0B", icon: "⚡" },
+          { label: "Condition", color: "#06B6D4", icon: "⏱" },
+          { label: "Randomizer", color: "#A78BFA", icon: "🔀" },
+          { label: "Smart Delay", color: "#EF4444", icon: "⏳" },
+        ].map(({ label, color, icon }) => (
           <button
             key={label}
             onClick={() => handlePick(label)}
             className="
-              w-full text-left px-3 py-2 mt-1
+              w-full flex items-center space-x-2 px-3 py-2 mt-1
               bg-white dark:bg-gray-700
               border border-gray-300 dark:border-gray-600
               rounded-md hover:bg-gray-100 dark:hover:bg-gray-600
               transition
             "
           >
-            {label}
+            <span
+              className="h-5 w-5 flex items-center justify-center rounded-full text-white text-xs"
+              style={{ backgroundColor: color }}
+            >
+              {icon}
+            </span>
+            <span className="text-sm text-gray-800 dark:text-gray-200">{label}</span>
           </button>
         ))}
       </div>
+
+      {/* The right‐side outgoing handle for chaining */}
+      <Handle
+        type="source"
+        position="right"
+        id="out"
+        style={{ background: "#9CA3AF", width: 10, height: 10 }}
+      />
     </div>
   );
 });
 
 //
 // ─── FacebookMessageNode ────────────────────────────────────────────────────
-// “Send Message” for Messenger, with gradient bubble icon
+// A blue‐bordered “Send Message” for Facebook‐Messenger, WITHOUT any image icon.
+// Now it simply displays "Facebook Send Message" text and a dashed “Add a text” area.
+// It has a top (incoming) handle and a right (outgoing) handle.
 //
 const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -373,36 +428,14 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }
       <Handle
         type="target"
         position="top"
-        id="a"
-        style={{ background: "#8B5CF6", width: 10, height: 10 }}
+        id="in"
+        style={{ background: "#1877F2", width: 10, height: 10 }}
       />
 
-      {/* Header row: Messenger gradient bubble icon + “Send Message” */}
+      {/* Header row: Just text “Facebook Send Message” */}
       <div className="flex items-center space-x-2 mb-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4 flex-shrink-0"
-          viewBox="0 0 512 512"
-        >
-          <defs>
-            <linearGradient id="messengerBubbleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#FF5E3A" />
-              <stop offset="25%" stopColor="#FF2A68" />
-              <stop offset="50%" stopColor="#A516F0" />
-              <stop offset="100%" stopColor="#0078FF" />
-            </linearGradient>
-          </defs>
-          <path
-            fill="url(#messengerBubbleGradient)"
-            d="M512 256c0 141.4-114.6 256-256 256-45.9 0-89.7-12.2-127.9-35.1l-93.3 31 31-93.3C12.2 345.7 0 301.9 0 256 0 114.6 114.6 0 256 0s256 114.6 256 256z"
-          />
-          <path
-            fill="#FFFFFF"
-            d="M273.9 179.4l-63.4 90.6-41.8-47.3c-3.6-4.1-9.8-4.6-13.9-1-4.1 3.6-4.6 9.8-1 13.9l54.8 62.1c2 2.2 5.1 3.2 8 .8l71.3-101.9c3.1-4.5 1.7-11-3-14.1-4.7-3.2-11.2-1.7-14.1 3z"
-          />
-        </svg>
         <span className="text-base font-medium text-gray-800 dark:text-gray-200">
-          Send Message
+          Facebook Send Message
         </span>
       </div>
 
@@ -435,7 +468,7 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
             rows={1}
-            placeholder="Type your message..."
+            placeholder="Add a text"
           />
         ) : (
           <span className="whitespace-normal break-words">
@@ -444,18 +477,16 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }
         )}
       </div>
 
-      {/* “Next Step” label */}
-      <div className="absolute right-3 bottom-8 text-xs text-gray-700 dark:text-gray-300">
-        Next Step
+      {/* Right‐side “Next Step →” handle */}
+      <div className="absolute right-[-5px] top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+        <Handle
+          type="source"
+          position="right"
+          id="out"
+          style={{ background: "#1877F2", width: 10, height: 10 }}
+        />
+        <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
       </div>
-
-      {/* Bottom handle (outgoing) */}
-      <Handle
-        type="source"
-        position="bottom"
-        id="b"
-        style={{ background: "#8B5CF6", width: 10, height: 10, bottom: "-5px" }}
-      />
 
       {/* Resize handle */}
       <div
@@ -469,7 +500,8 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }
 
 //
 // ─── InstagramMessageNode ───────────────────────────────────────────────────
-// “Send Message” for Instagram, with gradient camera icon
+// “Send Message” for Instagram, with circular gradient icon, dashed area, and
+// top (incoming) + right (outgoing) handles.
 //
 const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -559,32 +591,29 @@ const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data
       <Handle
         type="target"
         position="top"
-        id="a"
-        style={{ background: "#EC4899", width: 10, height: 10 }}
+        id="in"
+        style={{ background: "#E1306C", width: 10, height: 10 }}
       />
 
-      {/* Header row: Instagram gradient camera icon + “Send Message” */}
+      {/* Header row: Instagram gradient circle + text */}
       <div className="flex items-center space-x-2 mb-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4 flex-shrink-0"
-          viewBox="0 0 24 24"
+        <div
+          className="h-6 w-6 flex-shrink-0 rounded-full flex items-center justify-center"
+          style={{
+            background:
+              "linear-gradient(45deg, #F58529 0%, #DD2A7B 50%, #8134AF 75%, #515BD4 100%)",
+          }}
         >
-          <defs>
-            <linearGradient id="instagramGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#F58529" />
-              <stop offset="50%" stopColor="#DD2A7B" />
-              <stop offset="75%" stopColor="#8134AF" />
-              <stop offset="100%" stopColor="#515BD4" />
-            </linearGradient>
-          </defs>
-          <path
-            fill="url(#instagramGradient)"
-            d="M7.75 2C5.402 2 3.182 3.402 2 5.75v12.5C3.182 20.598 5.402 22 7.75 22h8.5c2.348 0 4.568-1.402 5.75-3.75V5.75C20.568 3.402 18.348 2 15.999 2h-8.25Zm4.249 3.2a4.8 4.8 0 1 1 0 9.6 4.8 4.8 0 0 1 0-9.6Zm5.3-0.25a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z"
-          />
-        </svg>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-3 w-3 text-white"
+            viewBox="0 0 24 24"
+          >
+            <path d="M7.75 2C5.402 2 3.182 3.402 2 5.75v12.5C3.182 20.598 5.402 22 7.75 22h8.5c2.348 0 4.568-1.402 5.75-3.75V5.75C20.568 3.402 18.348 2 15.999 2h-8.25Zm4.249 3.2a4.8 4.8 0 1 1 0 9.6 4.8 4.8 0 0 1 0-9.6Zm5.3-0.25a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z" />
+          </svg>
+        </div>
         <span className="text-base font-medium text-gray-800 dark:text-gray-200">
-          Send Message
+          Instagram Send Message
         </span>
       </div>
 
@@ -617,7 +646,7 @@ const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
             rows={1}
-            placeholder="Type your message..."
+            placeholder="Add a text"
           />
         ) : (
           <span className="whitespace-normal break-words">
@@ -626,18 +655,16 @@ const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data
         )}
       </div>
 
-      {/* “Next Step” label */}
-      <div className="absolute right-3 bottom-8 text-xs text-gray-700 dark:text-gray-300">
-        Next Step
+      {/* Right‐side “Next Step →” handle */}
+      <div className="absolute right-[-5px] top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+        <Handle
+          type="source"
+          position="right"
+          id="out"
+          style={{ background: "#E1306C", width: 10, height: 10 }}
+        />
+        <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
       </div>
-
-      {/* Bottom handle (outgoing) */}
-      <Handle
-        type="source"
-        position="bottom"
-        id="b"
-        style={{ background: "#EC4899", width: 10, height: 10, bottom: "-5px" }}
-      />
 
       {/* Resize handle */}
       <div
@@ -651,7 +678,8 @@ const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data
 
 //
 // ─── TelegramMessageNode ───────────────────────────────────────────────────
-// “Send Message” for Telegram, with paper‐plane icon
+// “Send Message” for Telegram, with circular icon, dashed area, and
+// top (incoming) + right (outgoing) handles.
 //
 const TelegramMessageNode = React.memo(function TelegramMessageNode({ id, data }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -728,7 +756,7 @@ const TelegramMessageNode = React.memo(function TelegramMessageNode({ id, data }
       className="
         relative
         bg-white dark:bg-gray-800
-        border-2 border-blue-300
+        border-2 border-[#37AEE2]
         rounded-lg
         shadow-md
         p-4
@@ -741,22 +769,23 @@ const TelegramMessageNode = React.memo(function TelegramMessageNode({ id, data }
       <Handle
         type="target"
         position="top"
-        id="a"
-        style={{ background: "#22D3EE", width: 10, height: 10 }}
+        id="in"
+        style={{ background: "#37AEE2", width: 10, height: 10 }}
       />
 
-      {/* Header row: Telegram paper‐plane icon + “Send Message” */}
+      {/* Header row: Telegram circle + text */}
       <div className="flex items-center space-x-2 mb-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4 flex-shrink-0"
-          fill="#37AEE2" // Telegram blue
-          viewBox="0 0 24 24"
-        >
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.02 7.35l-1.72 8.5c-.13.62-.48.77-.97.48L9.3 14.2l-1.8 1.73c-.16.16-.29.29-.64.29l.24-3.53 6.5-5.88c.28-.25-.06-.39-.22-.25L7.3 12.14l-3.08-.96c-.68-.21-.69-.67.14-1.01l11.66-4.47c.56-.21 1.06.15.88 1.01z" />
-        </svg>
+        <div className="h-6 w-6 flex-shrink-0 rounded-full flex items-center justify-center bg-[#37AEE2]">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-3 w-3 text-white"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.02 7.35l-1.72 8.5c-.13.62-.48.77-.97.48L9.3 14.2l-1.8 1.73c-.16.16-.29.29-.64.29l.24-3.53 6.5-5.88c.28-.25-.06-.39-.22-.25L7.3 12.14l-3.08-.96c-.68-.21-.69-.67.14-1.01l11.66-4.47c.56-.21 1.06.15.88 1.01z" />
+          </svg>
+        </div>
         <span className="text-base font-medium text-gray-800 dark:text-gray-200">
-          Send Message
+          Telegram Send Message
         </span>
       </div>
 
@@ -789,7 +818,7 @@ const TelegramMessageNode = React.memo(function TelegramMessageNode({ id, data }
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
             rows={1}
-            placeholder="Type your message..."
+            placeholder="Add a text"
           />
         ) : (
           <span className="whitespace-normal break-words">
@@ -798,18 +827,16 @@ const TelegramMessageNode = React.memo(function TelegramMessageNode({ id, data }
         )}
       </div>
 
-      {/* “Next Step” label */}
-      <div className="absolute right-3 bottom-8 text-xs text-gray-700 dark:text-gray-300">
-        Next Step
+      {/* Right‐side “Next Step →” handle */}
+      <div className="absolute right-[-5px] top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+        <Handle
+          type="source"
+          position="right"
+          id="out"
+          style={{ background: "#37AEE2", width: 10, height: 10 }}
+        />
+        <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
       </div>
-
-      {/* Bottom handle (outgoing) */}
-      <Handle
-        type="source"
-        position="bottom"
-        id="b"
-        style={{ background: "#22D3EE", width: 10, height: 10, bottom: "-5px" }}
-      />
 
       {/* Resize handle */}
       <div
@@ -823,7 +850,8 @@ const TelegramMessageNode = React.memo(function TelegramMessageNode({ id, data }
 
 //
 // ─── SMSMessageNode ────────────────────────────────────────────────────────
-// “Send Message” for SMS, with phone‐bubble icon
+// “Send Message” for SMS, with circular green icon, dashed area, and
+// top (incoming) + right (outgoing) handles.
 //
 const SMSMessageNode = React.memo(function SMSMessageNode({ id, data }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -913,22 +941,23 @@ const SMSMessageNode = React.memo(function SMSMessageNode({ id, data }) {
       <Handle
         type="target"
         position="top"
-        id="a"
-        style={{ background: "#10B981", width: 10, height: 10 }}
+        id="in"
+        style={{ background: "#34D399", width: 10, height: 10 }}
       />
 
-      {/* Header row: SMS phone‐bubble icon + “Send Message” */}
+      {/* Header row: SMS circle + text */}
       <div className="flex items-center space-x-2 mb-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4 flex-shrink-0"
-          fill="#34D399" // SMS green
-          viewBox="0 0 24 24"
-        >
-          <path d="M6.62 10.79a15.053 15.053 0 0 0 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1v3.5c0 .55-.45 1-1 1C9.16 21.5 2.5 14.84 2.5 6c0-.55.45-1 1-1H7c.55 0 1 .45 1 1 0 1.24.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
-        </svg>
+        <div className="h-6 w-6 flex-shrink-0 rounded-full flex items-center justify-center bg-[#34D399]">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-3 w-3 text-white"
+            viewBox="0 0 24 24"
+          >
+            <path d="M6.62 10.79a15.053 15.053 0 0 0 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1v3.5c0 .55-.45 1-1 1C9.16 21.5 2.5 14.84 2.5 6c0-.55.45-1 1-1H7c.55 0 1 .45 1 1 0 1.24.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
+          </svg>
+        </div>
         <span className="text-base font-medium text-gray-800 dark:text-gray-200">
-          Send Message
+          SMS Send Message
         </span>
       </div>
 
@@ -961,7 +990,7 @@ const SMSMessageNode = React.memo(function SMSMessageNode({ id, data }) {
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
             rows={1}
-            placeholder="Type your message..."
+            placeholder="Add a text"
           />
         ) : (
           <span className="whitespace-normal break-words">
@@ -970,18 +999,16 @@ const SMSMessageNode = React.memo(function SMSMessageNode({ id, data }) {
         )}
       </div>
 
-      {/* “Next Step” label */}
-      <div className="absolute right-3 bottom-8 text-xs text-gray-700 dark:text-gray-300">
-        Next Step
+      {/* Right‐side “Next Step →” handle */}
+      <div className="absolute right-[-5px] top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+        <Handle
+          type="source"
+          position="right"
+          id="out"
+          style={{ background: "#34D399", width: 10, height: 10 }}
+        />
+        <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
       </div>
-
-      {/* Bottom handle (outgoing) */}
-      <Handle
-        type="source"
-        position="bottom"
-        id="b"
-        style={{ background: "#10B981", width: 10, height: 10, bottom: "-5px" }}
-      />
 
       {/* Resize handle */}
       <div
@@ -995,7 +1022,8 @@ const SMSMessageNode = React.memo(function SMSMessageNode({ id, data }) {
 
 //
 // ─── EmailMessageNode ───────────────────────────────────────────────────────
-// “Send Message” for Email, with envelope icon
+// “Send Message” for Email, with circular purple icon, dashed area, and
+// top (incoming) + right (outgoing) handles.
 //
 const EmailMessageNode = React.memo(function EmailMessageNode({ id, data }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -1085,22 +1113,23 @@ const EmailMessageNode = React.memo(function EmailMessageNode({ id, data }) {
       <Handle
         type="target"
         position="top"
-        id="a"
+        id="in"
         style={{ background: "#A78BFA", width: 10, height: 10 }}
       />
 
-      {/* Header row: Envelope icon + “Send Message” */}
+      {/* Header row: Email circle + text */}
       <div className="flex items-center space-x-2 mb-2">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4 flex-shrink-0"
-          fill="#374151" // Email gray
-          viewBox="0 0 24 24"
-        >
-          <path d="M20 4H4C2.897 4 2 4.897 2 6v12c0 1.103.897 2 2 2h16c1.103 0 2-0.897 2-2V6c0-1.103-.897-2-2-2zm0 2v.511l-8 5.333-8-5.333V6h16zM4 18V8.489l8 5.333 8-5.333V18H4z" />
-        </svg>
+        <div className="h-6 w-6 flex-shrink-0 rounded-full flex items-center justify-center bg-[#8B5CF6]">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-3 w-3 text-white"
+            viewBox="0 0 24 24"
+          >
+            <path d="M20 4H4C2.897 4 2 4.897 2 6v12c0 1.103.897 2 2 2h16c1.103 0 2-0.897 2-2V6c0-1.103-.897-2-2-2zm0 2v.511l-8 5.333-8-5.333V6h16zM4 18V8.489l8 5.333 8-5.333V18H4z" />
+          </svg>
+        </div>
         <span className="text-base font-medium text-gray-800 dark:text-gray-200">
-          Send Message
+          Email Send Message
         </span>
       </div>
 
@@ -1133,7 +1162,7 @@ const EmailMessageNode = React.memo(function EmailMessageNode({ id, data }) {
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
             rows={1}
-            placeholder="Type your message..."
+            placeholder="Add a text"
           />
         ) : (
           <span className="whitespace-normal break-words">
@@ -1142,18 +1171,16 @@ const EmailMessageNode = React.memo(function EmailMessageNode({ id, data }) {
         )}
       </div>
 
-      {/* “Next Step” label */}
-      <div className="absolute right-3 bottom-8 text-xs text-gray-700 dark:text-gray-300">
-        Next Step
+      {/* Right‐side “Next Step →” handle */}
+      <div className="absolute right-[-5px] top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+        <Handle
+          type="source"
+          position="right"
+          id="out"
+          style={{ background: "#8B5CF6", width: 10, height: 10 }}
+        />
+        <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
       </div>
-
-      {/* Bottom handle (outgoing) */}
-      <Handle
-        type="source"
-        position="bottom"
-        id="b"
-        style={{ background: "#A78BFA", width: 10, height: 10, bottom: "-5px" }}
-      />
 
       {/* Resize handle */}
       <div
@@ -1167,7 +1194,7 @@ const EmailMessageNode = React.memo(function EmailMessageNode({ id, data }) {
 
 //
 // ─── AIModuleNode ───────────────────────────────────────────────────────────
-// A generic “AI” block; click to add/edit text.
+// A generic “AI” block; click to add/edit text. It already has top and right handles.
 //
 const AIModuleNode = React.memo(function AIModuleNode({ id, data }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -1212,11 +1239,13 @@ const AIModuleNode = React.memo(function AIModuleNode({ id, data }) {
         hover:shadow-md transition
         cursor-text
       "
+      style={{ minWidth: 200, minHeight: 80 }}
     >
+      {/* Top handle (incoming) */}
       <Handle
         type="target"
         position="top"
-        id="a"
+        id="in"
         style={{ background: "#6366F1", width: 10, height: 10 }}
       />
       {isEditing ? (
@@ -1233,7 +1262,7 @@ const AIModuleNode = React.memo(function AIModuleNode({ id, data }) {
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           rows={1}
-          placeholder="Type your message..."
+          placeholder="Click to add message"
         />
       ) : (
         <div className="min-h-[20px] text-gray-900 dark:text-gray-100 text-sm whitespace-normal break-words">
@@ -1244,12 +1273,16 @@ const AIModuleNode = React.memo(function AIModuleNode({ id, data }) {
           )}
         </div>
       )}
-      <Handle
-        type="source"
-        position="bottom"
-        id="b"
-        style={{ background: "#6366F1", width: 10, height: 10, bottom: "-5px" }}
-      />
+      {/* Right handle (outgoing) */}
+      <div className="absolute right-[-5px] top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+        <Handle
+          type="source"
+          position="right"
+          id="out"
+          style={{ background: "#6366F1", width: 10, height: 10 }}
+        />
+        <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
+      </div>
     </div>
   );
 });
@@ -1277,18 +1310,25 @@ function getId() {
 export default function AutomationFlow() {
   const router = useRouter();
 
-  // Start with an empty canvas (no initial Trigger)
+  // Start with an empty canvas:
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNodeIds, setSelectedNodeIds] = useState([]);
 
-  // Handler for editing any node’s text field
+  // Handler for editing any node’s text field:
   const handleLabelChange = useCallback(
     (id, value) => {
       setNodes((nds) =>
         nds.map((n) =>
           n.id === id
-            ? { ...n, data: { ...n.data, label: value, onChange: handleLabelChange } }
+            ? {
+                ...n,
+                data: {
+                  ...n.data,
+                  label: value,
+                  onChange: handleLabelChange,
+                },
+              }
             : n
         )
       );
@@ -1296,7 +1336,7 @@ export default function AutomationFlow() {
     [setNodes]
   );
 
-  // Resize callback (for both Trigger and message nodes)
+  // Resize callback (for both Trigger and message nodes):
   const handleResize = useCallback(
     (id, newW, newH) => {
       setNodes((nds) =>
@@ -1308,9 +1348,8 @@ export default function AutomationFlow() {
                   ...n.data,
                   width: newW,
                   height: newH,
-                  onResize: n.type === "trigger" ? handleResize : n.data.onResize,
-                  onAddTrigger:
-                    n.type === "trigger" ? spawnSelector : n.data.onAddTrigger,
+                  onResize: handleResize,
+                  onAddTrigger: n.type === "trigger" ? spawnSelector : n.data.onAddTrigger,
                 },
               }
             : n
@@ -1320,87 +1359,117 @@ export default function AutomationFlow() {
     [setNodes]
   );
 
-  // Called whenever you draw a connection
-  const onConnect = useCallback((params) => setEdges((eds) => addEdge(params, eds)), [
-    setEdges,
-  ]);
+  // Called whenever you draw a connection by hand:
+  const onConnect = useCallback((params) => {
+    setEdges((eds) => addEdge(params, eds));
+  }, [setEdges]);
 
-  // spawnSelector: Create a SelectorNode just to the right of a TriggerNode
-  const spawnSelector = (triggerId) => {
-    setNodes((nds) => {
-      const trigger = nds.find((n) => n.id === triggerId);
-      if (!trigger) return nds;
+  //
+  // ─── spawnSelector ──────────────────────────────────────────────────────────
+  // When a Trigger node’s “+ New Trigger” is clicked, create a Selector node
+  // directly to the right of it AND immediately connect them with an edge
+  // (from Trigger’s right handle → Selector’s top handle).
+  //
+  const spawnSelector = useCallback(
+    (triggerId) => {
+      setNodes((nds) => {
+        const triggerNode = nds.find((n) => n.id === triggerId);
+        if (!triggerNode) return nds;
 
-      const newId = getId();
-      const newSelector = {
-        id: newId,
-        type: "selector",
-        data: {
-          width: 200,
-          height: 300,
-          onSelect: (choiceLabel) => {
-            spawnBranchNode(choiceLabel, newId);
+        // 1) Create the new Selector node to the right of the Trigger:
+        const newSelectorId = getId();
+        const newSelector = {
+          id: newSelectorId,
+          type: "selector",
+          data: {
+            width: 200,
+            height: 300,
+            onSelect: (choiceLabel) => spawnBranchNode(choiceLabel, newSelectorId),
           },
-        },
-        position: {
-          x: trigger.position.x + trigger.data.width + 50,
-          y: trigger.position.y,
-        },
-      };
-      return [...nds, newSelector];
-    });
-  };
+          position: {
+            x: triggerNode.position.x + triggerNode.data.width + 50,
+            y: triggerNode.position.y,
+          },
+        };
 
-  // spawnBranchNode: Based on the chosen label, create the appropriate message‐node
-  const spawnBranchNode = (label, selectorId) => {
-    setNodes((nds) => {
-      const selector = nds.find((n) => n.id === selectorId);
-      const newId = getId();
-      let nodeType = "ai";
-      let width = 300;
-      let height = 180;
+        // 2) Immediately add an edge from the Trigger → Selector:
+        setEdges((prevEdges) =>
+          addEdge(
+            {
+              id: `edge_${triggerId}_${newSelectorId}`,
+              source: triggerId,
+              sourceHandle: "out",
+              target: newSelectorId,
+              targetHandle: "in",
+              type: "smoothstep",
+            },
+            prevEdges
+          )
+        );
 
-      switch (label) {
-        case "Messenger":
-          nodeType = "facebook";
-          break;
-        case "Instagram":
-          nodeType = "instagram";
-          break;
-        case "Telegram":
-          nodeType = "telegram";
-          break;
-        case "SMS":
-          nodeType = "sms";
-          break;
-        case "Email":
-          nodeType = "email";
-          break;
-        default:
-          nodeType = "ai";
-          break;
-      }
+        return [...nds, newSelector];
+      });
+    },
+    [setNodes, setEdges]
+  );
 
-      const newNode = {
-        id: newId,
-        type: nodeType,
-        data: {
-          width,
-          height,
-          label: "",
-          onResize: handleResize,
-          onChange: handleLabelChange,
-        },
-        position: {
-          x: selector ? selector.position.x + selector.data.width + 50 : 600,
-          y: selector ? selector.position.y + 50 : 100,
-        },
-      };
-      return [...nds, newNode];
-    });
-  };
+  //
+  // ─── spawnBranchNode ────────────────────────────────────────────────────────
+  // Depending on the user’s choice (Messenger/Instagram/…), spawn the appropriate
+  // message-node and place it to the right of the Selector.
+  //
+  const spawnBranchNode = useCallback(
+    (label, selectorId) => {
+      setNodes((nds) => {
+        const selector = nds.find((n) => n.id === selectorId);
+        const newId = getId();
+        let nodeType = "ai";
+        let width = 300;
+        let height = 180;
 
-  // Delete all currently selected nodes (and any connecting edges)
+        switch (label) {
+          case "Messenger":
+            nodeType = "facebook";
+            break;
+          case "Instagram":
+            nodeType = "instagram";
+            break;
+          case "Telegram":
+            nodeType = "telegram";
+            break;
+          case "SMS":
+            nodeType = "sms";
+            break;
+          case "Email":
+            nodeType = "email";
+            break;
+          default:
+            nodeType = "ai";
+            break;
+        }
+
+        const newNode = {
+          id: newId,
+          type: nodeType,
+          data: {
+            width,
+            height,
+            label: "",
+            onResize: handleResize,
+            onChange: handleLabelChange,
+          },
+          position: {
+            x: selector ? selector.position.x + selector.data.width + 50 : 600,
+            y: selector ? selector.position.y : 100,
+          },
+        };
+        return [...nds, newNode];
+      });
+    },
+    [setNodes, handleResize, handleLabelChange]
+  );
+
+  // Delete all currently selected nodes (and their connecting edges):
   const deleteSelectedNodes = () => {
     if (selectedNodeIds.length === 0) return;
     setNodes((nds) => nds.filter((n) => !selectedNodeIds.includes(n.id)));
@@ -1501,12 +1570,12 @@ export default function AutomationFlow() {
               nodeColor={(node) => {
                 if (node.type === "trigger") return "#34D399";
                 if (node.type === "selector") return "#9CA3AF";
-                if (node.type === "facebook") return "#0084FF";
-                if (node.type === "instagram") return "#E4405F";
+                if (node.type === "facebook") return "#1877F2";
+                if (node.type === "instagram") return "#E1306C";
                 if (node.type === "telegram") return "#37AEE2";
                 if (node.type === "sms") return "#34D399";
-                if (node.type === "email") return "#374151";
-                return "#6366F1";
+                if (node.type === "email") return "#8B5CF6";
+                return "#6366F1"; // AI and others
               }}
             />
             <Controls />
