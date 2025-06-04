@@ -1,80 +1,118 @@
 // pages/login.jsx
 import { useState } from 'react'
-import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 
 export default function LoginPage() {
-  const { data: session } = useSession()
   const router = useRouter()
-  const [identifier, setIdentifier] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-
-  // If already signed in, redirect you
-  if (session) {
-    if (session.user.role === 'admin') router.replace('/admin')
-    else router.replace('/dashboard')
-    return null
-  }
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
-    const res = await signIn('credentials', {
-      redirect: false,
-      identifier,
-      password,
+
+    // Call your custom API route (/api/login)
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
     })
-    if (res.error) {
-      setError(res.error)
-    } else {
-      router.replace(res.url)  
+
+    const data = await res.json()
+    if (!res.ok) {
+      setError(data.message || 'Login failed')
+      return
     }
+
+    // If role-based redirect (optional)
+    if (data.role === 'admin') {
+      router.replace('/admin')
+      return
+    }
+
+    router.replace('/dashboard')
   }
 
   return (
-    <div className="relative flex items-center justify-center h-screen bg-[#274690] overflow-hidden">
-      <form
-        onSubmit={handleSubmit}
-        className="relative z-10 flex flex-col items-center text-white space-y-4 p-8 bg-black/20 rounded-xl"
-      >
-        <h1 className="text-3xl font-bold">Login</h1>
+    <div className="min-h-screen flex items-center justify-center bg-blue-500 px-4">
+      <div className="bg-white rounded-2xl shadow-lg w-full max-w-sm p-8">
+        <h2 className="text-2xl font-bold text-center text-blue-600 mb-6">
+          Welcome Back
+        </h2>
 
-        <input
-          type="text"
-          value={identifier}
-          onChange={(e) => setIdentifier(e.target.value)}
-          placeholder="Username or Email"
-          className="w-80 px-4 py-2 border border-white rounded-full placeholder-white bg-transparent text-white focus:outline-none"
-          required
-        />
+        {error && (
+          <p className="text-red-500 text-center mb-4">{error}</p>
+        )}
 
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          className="w-80 px-4 py-2 border border-white rounded-full placeholder-white bg-transparent text-white focus:outline-none"
-          required
-        />
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-gray-700 font-medium"
+            >
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="you@example.com"
+              className="
+                w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg
+                focus:outline-none focus:ring-2 focus:ring-blue-400
+                transition duration-200
+              "
+            />
+          </div>
 
-        {error && <p className="text-red-300 text-sm">{error}</p>}
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-gray-700 font-medium"
+            >
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="••••••••"
+              className="
+                w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg
+                focus:outline-none focus:ring-2 focus:ring-blue-400
+                transition duration-200
+              "
+            />
+          </div>
 
-        <button
-          type="submit"
-          className="w-80 px-4 py-2 border border-[#00FF00] rounded-full text-[#00FF00] font-medium hover:bg-[#00FF00] hover:text-[#274690]"
-        >
-          Login
-        </button>
+          <button
+            type="submit"
+            className="
+              w-full bg-blue-600 text-white py-2 rounded-lg 
+              hover:bg-blue-700 focus:ring-4 focus:ring-blue-300
+              transition duration-200
+            "
+          >
+            Login
+          </button>
+        </form>
 
-        <p className="text-sm">
-          Not a member yet?{' '}
-          <Link href="/register" className="underline">
+        <p className="mt-4 text-center text-gray-600">
+          Don’t have an account?{' '}
+          <Link
+            href="/register"
+            className="text-blue-600 hover:underline"
+          >
             Register
           </Link>
         </p>
-      </form>
+      </div>
     </div>
   )
 }

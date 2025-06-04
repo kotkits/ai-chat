@@ -1,10 +1,11 @@
 // pages/index.jsx
+
 export async function getServerSideProps() {
   return {
     redirect: {
       destination: '/login',
-      permanent: false
-    }
+      permanent: false,
+    },
   }
 }
 

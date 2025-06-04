@@ -10,89 +10,150 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
+    setSuccess('')
+
     const res = await fetch('/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fullName, username, email, password }),
     })
+    const data = await res.json()
 
-    if (res.status === 201) {
-      router.push('/login')
+    if (!res.ok) {
+      setError(data.message || 'Registration failed')
     } else {
-      const data = await res.json().catch(() => ({}))
-      setError(
-        data.message ||
-        (res.status === 409
-          ? 'Email or username already in use'
-          : 'Registration failed')
-      )
+      setSuccess('Account created! Redirecting to login...')
+      setTimeout(() => router.push('/login'), 2000)
     }
   }
 
   return (
-    <div className="relative flex items-center justify-center h-screen bg-[#274690] overflow-hidden">
-      <form
-        onSubmit={handleSubmit}
-        className="relative z-10 flex flex-col items-center text-white space-y-4 p-8 bg-black/20 rounded-xl"
-      >
-        <h1 className="text-3xl font-bold">Register</h1>
-
-        <input
-          type="text"
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          placeholder="Full Name"
-          className="w-80 px-4 py-2 border border-white rounded-full placeholder-white bg-transparent text-white focus:outline-none"
-          required
-        />
-
-        <input
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="Username"
-          className="w-80 px-4 py-2 border border-white rounded-full placeholder-white bg-transparent text-white focus:outline-none"
-          required
-        />
-
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          className="w-80 px-4 py-2 border border-white rounded-full placeholder-white bg-transparent text-white focus:outline-none"
-          required
-        />
-
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          className="w-80 px-4 py-2 border border-white rounded-full placeholder-white bg-transparent text-white focus:outline-none"
-          required
-        />
-
-        {error && <p className="text-red-300 text-sm">{error}</p>}
-
-        <button
-          type="submit"
-          className="w-80 px-4 py-2 border border-[#00FF00] rounded-full text-[#00FF00] font-medium hover:bg-[#00FF00] hover:text-[#274690]"
-        >
+    <div className="min-h-screen flex items-center justify-center bg-blue-500 px-4">
+      <div className="bg-white rounded-2xl shadow-lg w-full max-w-sm p-8">
+        <h2 className="text-2xl font-bold text-center text-blue-600 mb-6">
           Create Account
-        </button>
+        </h2>
 
-        <p className="text-sm">
+        {error && (
+          <p className="text-red-500 text-center mb-4">{error}</p>
+        )}
+        {success && (
+          <p className="text-green-500 text-center mb-4">{success}</p>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label
+              htmlFor="fullName"
+              className="block text-gray-700 font-medium"
+            >
+              Full Name
+            </label>
+            <input
+              type="text"
+              id="fullName"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+              placeholder="John Doe"
+              className="
+                w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg
+                focus:outline-none focus:ring-2 focus:ring-blue-400
+                transition duration-200
+              "
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="username"
+              className="block text-gray-700 font-medium"
+            >
+              Username
+            </label>
+            <input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              placeholder="johndoe123"
+              className="
+                w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg
+                focus:outline-none focus:ring-2 focus:ring-blue-400
+                transition duration-200
+              "
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-gray-700 font-medium"
+            >
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="you@example.com"
+              className="
+                w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg
+                focus:outline-none focus:ring-2 focus:ring-blue-400
+                transition duration-200
+              "
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-gray-700 font-medium"
+            >
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="••••••••"
+              className="
+                w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg
+                focus:outline-none focus:ring-2 focus:ring-blue-400
+                transition duration-200
+              "
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="
+              w-full bg-blue-600 text-white py-2 rounded-lg 
+              hover:bg-blue-700 focus:ring-4 focus:ring-blue-300
+              transition duration-200
+            "
+          >
+            Register
+          </button>
+        </form>
+
+        <p className="mt-4 text-center text-gray-600">
           Already have an account?{' '}
-          <Link href="/login" className="underline">
+          <Link href="/login" className="text-blue-600 hover:underline">
             Login
           </Link>
         </p>
-      </form>
+      </div>
     </div>
   )
 }

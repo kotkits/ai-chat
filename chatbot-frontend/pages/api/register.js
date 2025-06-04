@@ -11,29 +11,42 @@ export default async function handler(req, res) {
   }
 
   const { fullName, username, email, password } = req.body
-  await client.connect()
-  const db = client.db()
-
-  // check for existing user
-  const existing = await db.collection('users').findOne({
-    $or: [{ email }, { username }]
-  })
-  if (existing) {
-    return res.status(409).json({ message: 'Email or username already in use' })
+  if (!fullName || !username || !email || !password) {
+    return res.status(400).json({ message: 'All fields are required' })
   }
 
-  // hash the password
-  const hash = await bcrypt.hash(password, 10)
+  try {
+    await client.connect()
+    const db = client.db()
 
-  // insert the user
-  await db.collection('users').insertOne({
-    fullName,
-    username,
-    email,
-    password: hash,
-    role: 'user',
-    createdAt: new Date()
-  })
+    // Check if email already exists
+    const existingUser = await db.collection('users').findOne({ email })
+    if (existingUser) {
+      return res.status(409).json({ message: 'Email already in use' })
+    }
 
-  return res.status(201).json({ message: 'User created' })
+    // Hash the password
+    const saltRounds = 10
+    const hashedPassword = await bcrypt.hash(password, saltRounds)
+
+    // Insert the new user (default role is "user")
+    const newUser = {
+      fullName,
+      username,
+      email,
+      password: hashedPassword,
+      role: 'user',
+      createdAt: new Date(),
+      channels: [], // start with no connected channels
+      subscription: 'Free',
+    }
+
+    await db.collection('users').insertOne(newUser)
+    return res.status(201).json({ message: 'User created' })
+  } catch (error) {
+    console.error('Register error:', error)
+    return res.status(500).json({ message: 'Internal server error' })
+  } finally {
+    await client.close()
+  }
 }
