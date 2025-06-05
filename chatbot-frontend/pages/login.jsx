@@ -2,10 +2,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
+import { signIn } from 'next-auth/react'   // ← import NextAuth’s signIn helper
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
+  const [identifier, setIdentifier] = useState('') // “Username or Email”
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
@@ -13,26 +14,44 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
 
-    // Call your custom API route (/api/login)
-    const res = await fetch('/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+    // 1. Call NextAuth’s signIn() with the "credentials" provider
+    const result = await signIn('credentials', {
+      redirect: false,            // we’ll handle redirection manually below
+      identifier,
+      password,
     })
 
-    const data = await res.json()
-    if (!res.ok) {
-      setError(data.message || 'Login failed')
+    // 2. If signIn returned an error, display it
+    if (result.error) {
+      setError(result.error || 'Login failed')
       return
     }
 
-    // If role-based redirect (optional)
-    if (data.role === 'admin') {
+    // 3. At this point, NextAuth has created a session cookie.
+    //    We now check `result.ok` and/or inspect `result.url` to redirect.
+    //    By default, `signIn` will return { ok: true, error: null, status: 200, url: "/" }.
+    //    However, because we configured `pages: { signIn: "/login", error: "/login" }`
+    //    in [...nextauth].js (:contentReference[oaicite:2]{index=2}), `result.url` will be "/" on success.
+    //    We still need to read the role from the session—so let’s re‐fetch the session.
+
+    // NextAuth does not include role in “result” by default, so we must
+    // do a client‐side fetch for the session (so that our `admin.jsx`/`dashboard.jsx`
+    // can run their `useSession()` logic successfully). But we also want to
+    // redirect immediately, so we know whether to go to /admin or /dashboard.
+
+    // 4. Fetch the session from NextAuth to read the role
+    const sessionRes = await fetch('/api/auth/session')
+    const session = await sessionRes.json()
+
+    // 5. If session exists and has a user.role, redirect accordingly
+    if (session?.user?.role === 'admin') {
       router.replace('/admin')
-      return
+    } else if (session?.user?.role === 'user') {
+      router.replace('/dashboard')
+    } else {
+      // Shouldn’t happen if authorize() always sets role; fallback to login
+      setError('Unable to determine user role')
     }
-
-    router.replace('/dashboard')
   }
 
   return (
@@ -42,25 +61,23 @@ export default function LoginPage() {
           Welcome Back
         </h2>
 
-        {error && (
-          <p className="text-red-500 text-center mb-4">{error}</p>
-        )}
+        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label
-              htmlFor="email"
+              htmlFor="identifier"
               className="block text-gray-700 font-medium"
             >
-              Email
+              Email or Username
             </label>
             <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              id="identifier"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               required
-              placeholder="you@example.com"
+              placeholder="you@example.com or johndoe123"
               className="
                 w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg
                 focus:outline-none focus:ring-2 focus:ring-blue-400
@@ -105,10 +122,7 @@ export default function LoginPage() {
 
         <p className="mt-4 text-center text-gray-600">
           Don’t have an account?{' '}
-          <Link
-            href="/register"
-            className="text-blue-600 hover:underline"
-          >
+          <Link href="/register" className="text-blue-600 hover:underline">
             Register
           </Link>
         </p>

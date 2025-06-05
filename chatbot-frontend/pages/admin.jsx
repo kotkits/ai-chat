@@ -1,34 +1,26 @@
 // pages/admin.jsx
-import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/router'
 import { useEffect } from 'react'
+import { useRouter } from 'next/router'
+import { useSession } from 'next-auth/react'
 
-import DashboardLayout    from '../components/DashboardLayout'
-import HomeContent        from '../components/HomeContent'
-import ContactsContent    from '../components/ContactsContent'
-import AutomationContent  from '../components/AutomationContent'
-import LiveChatContent    from '../components/LiveChatContent'
+import DashboardLayout     from '../components/DashboardLayout'
+import HomeContent         from '../components/HomeContent'
+import ContactsContent     from '../components/ContactsContent'
+import AutomationContent   from '../components/AutomationContent'
+import LiveChatContent     from '../components/LiveChatContent'
 import BroadcastingContent from '../components/BroadcastingContent'
-import SettingsContent    from '../components/SettingsContent'
-import AdminUsers         from '../components/AdminUsers'
-import AuditLogs          from '../components/AuditLogs'
-import AdminSettings      from '../components/AdminSettings'
-import { adminFullMenu }  from '../data/menus'
+import SettingsContent     from '../components/SettingsContent'
+import AdminUsers          from '../components/AdminUsers'
+import AuditLogs           from '../components/AuditLogs'
+import AdminSettings       from '../components/AdminSettings'
+import { adminFullMenu }   from '../data/menus'
 
 export default function AdminDashboard() {
-  const { data: session, status } = useSession()
   const router = useRouter()
+  const { data: session, status } = useSession()
 
-  // Protect route: only admins allowed
-  useEffect(() => {
-    if (status === 'unauthenticated' ||
-       (status === 'authenticated' && session.user.role !== 'admin')) {
-      router.replace('/login')
-    }
-  }, [status, session, router])
-
-  // Show loading until we know auth status
-  if (status !== 'authenticated') {
+  // If NextAuth is still loading the session, show nothing (or a spinner)
+  if (status === 'loading') {
     return (
       <div className="flex items-center justify-center h-screen">
         Loading…
@@ -36,11 +28,20 @@ export default function AdminDashboard() {
     )
   }
 
+  // If there is no session or the role isn’t "admin", redirect to /login
+  if (!session || session.user.role !== 'admin') {
+    useEffect(() => {
+      router.replace('/login')
+    }, [router])
+    return null
+  }
+
+  // At this point, we know the user is authenticated and has role "admin"
   return (
     <DashboardLayout menuItems={adminFullMenu}>
       {(selected) => {
         switch (selected) {
-          // user‐portal items
+          // user‐portal items (admins can still access these)
           case 'home':         return <HomeContent />
           case 'contacts':     return <ContactsContent />
           case 'automation':   return <AutomationContent />
@@ -53,7 +54,7 @@ export default function AdminDashboard() {
           case 'logs':           return <AuditLogs />
           case 'settings_admin': return <AdminSettings />
 
-          // fallback
+          // default to home
           default: return <HomeContent />
         }
       }}
