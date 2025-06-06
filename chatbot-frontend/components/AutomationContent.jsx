@@ -16,7 +16,7 @@ import "reactflow/dist/style.css";
 //
 // ─── TriggerNode ────────────────────────────────────────────────────────────
 // A green‐bordered box with header “⚡ When…”, description text, a dashed “+ New Trigger”
-// area, and a right‐side outgoing handle labeled “Then →”.
+// area, and a right‐side outgoing handle labeled “Next Step →”.
 //
 const TriggerNode = React.memo(
   function TriggerNode({ id, data }) {
@@ -116,16 +116,16 @@ const TriggerNode = React.memo(
           </button>
         </div>
 
-                  {/* Right‐side “Next Step →” handle */}
-          <div className="absolute right-[-5px] top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
-            <Handle
-              type="source"
-              position="right"
-              id="out"
-              style={{ background: "#E1306C", width: 10, height: 10 }}
-            />
-            <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
-          </div>
+        {/* Right‐side “Next Step →” handle */}
+        <div className="absolute right-[-5px] top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+          <Handle
+            type="source"
+            position="right"
+            id="out"
+            style={{ background: "#34D399", width: 10, height: 10 }}
+          />
+          <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
+        </div>
 
         {/* Resize handle (tiny green square) */}
         <div
@@ -209,7 +209,15 @@ const SelectorNode = React.memo(function SelectorNode({ id, data }) {
             {label === "Messenger" ? (
               <div
                 className="h-5 w-5 flex-shrink-0 rounded-full flex items-center justify-center bg-[#0084FF]"
-              ></div>
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-3 w-3 text-white"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 2C6.48 2 2 6.48 2 12c0 4.418 2.86 8.166 6.844 9.5L12 22l3.156-.5C19.14 20.16 22 16.418 22 12c0-5.52-4.48-10-10-10zm4.825 7.2l-1.9 9.07c-.143.61-.52.76-1.05.47l-2.9-2.14-1.4 1.35c-.155.155-.285.285-.585.285l.21-3.03 6.52-4.96c.24-.21-.05-.33-.37-.12l-6.82 4.28-2.94-.92c-.64-.195-.65-.64.13-.95l11.66-4.47c.56-.21 1.06.15.88 1.01Z" />
+                </svg>
+              </div>
             ) : label === "Instagram" ? (
               <div
                 className="h-5 w-5 flex-shrink-0 rounded-full flex items-center justify-center"
@@ -295,7 +303,7 @@ const SelectorNode = React.memo(function SelectorNode({ id, data }) {
         <div className="text-xs text-gray-600 dark:text-gray-400 uppercase font-medium">
           Logic
         </div>
-        {[ 
+        {[
           { label: "Actions", color: "#F59E0B", icon: "⚡" },
           { label: "Condition", color: "#06B6D4", icon: "⏱" },
           { label: "Randomizer", color: "#A78BFA", icon: "🔀" },
@@ -336,9 +344,8 @@ const SelectorNode = React.memo(function SelectorNode({ id, data }) {
 
 //
 // ─── FacebookMessageNode ────────────────────────────────────────────────────
-// A blue‐bordered “Send Message” for Facebook‐Messenger, WITHOUT any image icon.
-// Now it simply displays "Facebook Send Message" text and a dashed “Add a text” area.
-// It has a top (incoming) handle and a right (outgoing) handle.
+// A blue‐bordered “Send Message” for Messenger, with brand‐colored icon,
+// dashed “Add a text” area, and a bare circle handle on the right.
 //
 const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -415,7 +422,7 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }
       className="
         relative
         bg-white dark:bg-gray-800
-        border-2 border-blue-400
+        border-2 border-[#0084FF]
         rounded-lg
         shadow-md
         p-4
@@ -424,18 +431,29 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }
         cursor-default
       "
     >
-      {/* Top handle (incoming) */}
+      {/* Top incoming handle */}
       <Handle
         type="target"
         position="top"
         id="in"
-        style={{ background: "#1877F2", width: 10, height: 10 }}
+        style={{ background: "#0084FF", width: 10, height: 10 }}
       />
 
-      {/* Header row: Just text “Facebook Send Message” */}
+      {/* Header row: circular Messenger icon + “Send Message” */}
       <div className="flex items-center space-x-2 mb-2">
+        <div
+          className="h-6 w-6 flex-shrink-0 rounded-full flex items-center justify-center bg-[#0084FF]"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-3 w-3 text-white"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 2C6.48 2 2 6.48 2 12c0 4.418 2.86 8.166 6.844 9.5L12 22l3.156-.5C19.14 20.16 22 16.418 22 12c0-5.52-4.48-10-10-10zm4.825 7.2l-1.9 9.07c-.143.61-.52.76-1.05.47l-2.9-2.14-1.4 1.35c-.155.155-.285.285-.585.285l.21-3.03 6.52-4.96c.24-.21-.05-.33-.37-.12l-6.82 4.28-2.94-.92c-.64-.195-.65-.64.13-.95l11.66-4.47c.56-.21 1.06.15.88 1.01Z" />
+          </svg>
+        </div>
         <span className="text-base font-medium text-gray-800 dark:text-gray-200">
-          Facebook Send Message
+          Send Message
         </span>
       </div>
 
@@ -477,15 +495,20 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }
         )}
       </div>
 
-      {/* Right‐side “Next Step →” handle */}
-      <div className="absolute right-[-5px] top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+      {/* Right‐side outgoing handle (bare circle) */}
+      <div className="absolute right-[-6px] top-1/2 transform -translate-y-1/2">
         <Handle
           type="source"
           position="right"
           id="out"
-          style={{ background: "#1877F2", width: 10, height: 10 }}
+          style={{
+            background: "#FFFFFF",
+            width: 12,
+            height: 12,
+            border: "2px solid #0084FF",
+            borderRadius: "50%",
+          }}
         />
-        <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
       </div>
 
       {/* Resize handle */}
@@ -500,8 +523,8 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }
 
 //
 // ─── InstagramMessageNode ───────────────────────────────────────────────────
-// “Send Message” for Instagram, with circular gradient icon, dashed area, and
-// top (incoming) + right (outgoing) handles.
+// A pink‐bordered “Send Message” for Instagram, with gradient icon,
+// dashed “Add a text” area, and a bare circle handle on the right.
 //
 const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -587,15 +610,15 @@ const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data
         cursor-default
       "
     >
-      {/* Top handle (incoming) */}
+      {/* Top incoming handle */}
       <Handle
         type="target"
         position="top"
         id="in"
-        style={{ background: "#E1306C", width: 10, height: 10 }}
+        style={{ background: "#E4405F", width: 10, height: 10 }}
       />
 
-      {/* Header row: Instagram gradient circle + text */}
+      {/* Header row: Instagram gradient circle + “Send Message” */}
       <div className="flex items-center space-x-2 mb-2">
         <div
           className="h-6 w-6 flex-shrink-0 rounded-full flex items-center justify-center"
@@ -613,7 +636,7 @@ const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data
           </svg>
         </div>
         <span className="text-base font-medium text-gray-800 dark:text-gray-200">
-          Instagram Send Message
+          Send Message
         </span>
       </div>
 
@@ -655,15 +678,20 @@ const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data
         )}
       </div>
 
-      {/* Right‐side “Next Step →” handle */}
-      <div className="absolute right-[-5px] top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+      {/* Right‐side outgoing handle (bare circle) */}
+      <div className="absolute right-[-6px] top-1/2 transform -translate-y-1/2">
         <Handle
           type="source"
           position="right"
           id="out"
-          style={{ background: "#E1306C", width: 10, height: 10 }}
+          style={{
+            background: "#FFFFFF",
+            width: 12,
+            height: 12,
+            border: "2px solid #E4405F",
+            borderRadius: "50%",
+          }}
         />
-        <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
       </div>
 
       {/* Resize handle */}
@@ -678,8 +706,8 @@ const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data
 
 //
 // ─── TelegramMessageNode ───────────────────────────────────────────────────
-// “Send Message” for Telegram, with circular icon, dashed area, and
-// top (incoming) + right (outgoing) handles.
+// A light–blue bordered “Send Message” for Telegram, with brand icon,
+// dashed “Add a text” area, and a bare circle handle on the right.
 //
 const TelegramMessageNode = React.memo(function TelegramMessageNode({ id, data }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -765,7 +793,7 @@ const TelegramMessageNode = React.memo(function TelegramMessageNode({ id, data }
         cursor-default
       "
     >
-      {/* Top handle (incoming) */}
+      {/* Top incoming handle */}
       <Handle
         type="target"
         position="top"
@@ -773,7 +801,7 @@ const TelegramMessageNode = React.memo(function TelegramMessageNode({ id, data }
         style={{ background: "#37AEE2", width: 10, height: 10 }}
       />
 
-      {/* Header row: Telegram circle + text */}
+      {/* Header row: Telegram circle + “Send Message” */}
       <div className="flex items-center space-x-2 mb-2">
         <div className="h-6 w-6 flex-shrink-0 rounded-full flex items-center justify-center bg-[#37AEE2]">
           <svg
@@ -781,11 +809,11 @@ const TelegramMessageNode = React.memo(function TelegramMessageNode({ id, data }
             className="h-3 w-3 text-white"
             viewBox="0 0 24 24"
           >
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.02 7.35l-1.72 8.5c-.13.62-.48.77-.97.48L9.3 14.2l-1.8 1.73c-.16.16-.29.29-.64.29l.24-3.53 6.5-5.88c.28-.25-.06-.39-.22-.25L7.3 12.14l-3.08-.96c-.68-.21-.69-.67.14-1.01l11.66-4.47c.56-.21 1.06.15.88 1.01z" />
+            <path d="M12 2C6.48 2 2 6.48 2 12c0 4.418 2.86 8.166 6.844 9.5L12 22l3.156-.5C19.14 20.16 22 16.418 22 12c0-5.52-4.48-10-10-10Zm4.825 7.2l-1.9 9.07c-.143.61-.52.76-1.05.47l-2.9-2.14-1.4 1.35c-.155.155-.285.285-.585.285l.21-3.03 6.52-4.96c.24-.21-.05-.33-.37-.12l-6.82 4.28-2.94-.92c-.64-.195-.65-.64.13-.95l11.66-4.47c.56-.21 1.06.15.88 1.01Z" />
           </svg>
         </div>
         <span className="text-base font-medium text-gray-800 dark:text-gray-200">
-          Telegram Send Message
+          Send Message
         </span>
       </div>
 
@@ -827,15 +855,20 @@ const TelegramMessageNode = React.memo(function TelegramMessageNode({ id, data }
         )}
       </div>
 
-      {/* Right‐side “Next Step →” handle */}
-      <div className="absolute right-[-5px] top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+      {/* Right‐side outgoing handle (bare circle) */}
+      <div className="absolute right-[-6px] top-1/2 transform -translate-y-1/2">
         <Handle
           type="source"
           position="right"
           id="out"
-          style={{ background: "#37AEE2", width: 10, height: 10 }}
+          style={{
+            background: "#FFFFFF",
+            width: 12,
+            height: 12,
+            border: "2px solid #37AEE2",
+            borderRadius: "50%",
+          }}
         />
-        <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
       </div>
 
       {/* Resize handle */}
@@ -850,8 +883,8 @@ const TelegramMessageNode = React.memo(function TelegramMessageNode({ id, data }
 
 //
 // ─── SMSMessageNode ────────────────────────────────────────────────────────
-// “Send Message” for SMS, with circular green icon, dashed area, and
-// top (incoming) + right (outgoing) handles.
+// A green‐bordered “Send Message” for SMS, with brand icon,
+// dashed “Add a text” area, and a bare circle handle on the right.
 //
 const SMSMessageNode = React.memo(function SMSMessageNode({ id, data }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -928,7 +961,7 @@ const SMSMessageNode = React.memo(function SMSMessageNode({ id, data }) {
       className="
         relative
         bg-white dark:bg-gray-800
-        border-2 border-green-500
+        border-2 border-[#34D399]
         rounded-lg
         shadow-md
         p-4
@@ -937,7 +970,7 @@ const SMSMessageNode = React.memo(function SMSMessageNode({ id, data }) {
         cursor-default
       "
     >
-      {/* Top handle (incoming) */}
+      {/* Top incoming handle */}
       <Handle
         type="target"
         position="top"
@@ -945,7 +978,7 @@ const SMSMessageNode = React.memo(function SMSMessageNode({ id, data }) {
         style={{ background: "#34D399", width: 10, height: 10 }}
       />
 
-      {/* Header row: SMS circle + text */}
+      {/* Header row: SMS circle + “Send Message” */}
       <div className="flex items-center space-x-2 mb-2">
         <div className="h-6 w-6 flex-shrink-0 rounded-full flex items-center justify-center bg-[#34D399]">
           <svg
@@ -957,7 +990,7 @@ const SMSMessageNode = React.memo(function SMSMessageNode({ id, data }) {
           </svg>
         </div>
         <span className="text-base font-medium text-gray-800 dark:text-gray-200">
-          SMS Send Message
+          Send Message
         </span>
       </div>
 
@@ -999,15 +1032,20 @@ const SMSMessageNode = React.memo(function SMSMessageNode({ id, data }) {
         )}
       </div>
 
-      {/* Right‐side “Next Step →” handle */}
-      <div className="absolute right-[-5px] top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+      {/* Right‐side outgoing handle (bare circle) */}
+      <div className="absolute right-[-6px] top-1/2 transform -translate-y-1/2">
         <Handle
           type="source"
           position="right"
           id="out"
-          style={{ background: "#34D399", width: 10, height: 10 }}
+          style={{
+            background: "#FFFFFF",
+            width: 12,
+            height: 12,
+            border: "2px solid #34D399",
+            borderRadius: "50%",
+          }}
         />
-        <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
       </div>
 
       {/* Resize handle */}
@@ -1022,8 +1060,8 @@ const SMSMessageNode = React.memo(function SMSMessageNode({ id, data }) {
 
 //
 // ─── EmailMessageNode ───────────────────────────────────────────────────────
-// “Send Message” for Email, with circular purple icon, dashed area, and
-// top (incoming) + right (outgoing) handles.
+// A purple‐bordered “Send Message” for Email, with brand icon,
+// dashed “Add a text” area, and a bare circle handle on the right.
 //
 const EmailMessageNode = React.memo(function EmailMessageNode({ id, data }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -1100,7 +1138,7 @@ const EmailMessageNode = React.memo(function EmailMessageNode({ id, data }) {
       className="
         relative
         bg-white dark:bg-gray-800
-        border-2 border-purple-500
+        border-2 border-[#8B5CF6]
         rounded-lg
         shadow-md
         p-4
@@ -1109,15 +1147,15 @@ const EmailMessageNode = React.memo(function EmailMessageNode({ id, data }) {
         cursor-default
       "
     >
-      {/* Top handle (incoming) */}
+      {/* Top incoming handle */}
       <Handle
         type="target"
         position="top"
         id="in"
-        style={{ background: "#A78BFA", width: 10, height: 10 }}
+        style={{ background: "#8B5CF6", width: 10, height: 10 }}
       />
 
-      {/* Header row: Email circle + text */}
+      {/* Header row: Email circle + “Send Message” */}
       <div className="flex items-center space-x-2 mb-2">
         <div className="h-6 w-6 flex-shrink-0 rounded-full flex items-center justify-center bg-[#8B5CF6]">
           <svg
@@ -1129,7 +1167,7 @@ const EmailMessageNode = React.memo(function EmailMessageNode({ id, data }) {
           </svg>
         </div>
         <span className="text-base font-medium text-gray-800 dark:text-gray-200">
-          Email Send Message
+          Send Message
         </span>
       </div>
 
@@ -1171,15 +1209,20 @@ const EmailMessageNode = React.memo(function EmailMessageNode({ id, data }) {
         )}
       </div>
 
-      {/* Right‐side “Next Step →” handle */}
-      <div className="absolute right-[-5px] top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+      {/* Right‐side outgoing handle (bare circle) */}
+      <div className="absolute right-[-6px] top-1/2 transform -translate-y-1/2">
         <Handle
           type="source"
           position="right"
           id="out"
-          style={{ background: "#8B5CF6", width: 10, height: 10 }}
+          style={{
+            background: "#FFFFFF",
+            width: 12,
+            height: 12,
+            border: "2px solid #8B5CF6",
+            borderRadius: "50%",
+          }}
         />
-        <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
       </div>
 
       {/* Resize handle */}
@@ -1274,18 +1317,18 @@ const AIModuleNode = React.memo(function AIModuleNode({ id, data }) {
         </div>
       )}
       {/* Right handle (outgoing) */}
-      <div className="absolute right-[-5px] top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+      <div className="absolute right-[-5px] top-1/2 transform -translate-y-1/2">
         <Handle
           type="source"
           position="right"
           id="out"
           style={{ background: "#6366F1", width: 10, height: 10 }}
         />
-        <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
       </div>
     </div>
   );
-});
+}); // ← React.memo is now properly closed
+
 
 //
 // ─── Register Node Types ─────────────────────────────────────────────────────
@@ -1570,8 +1613,8 @@ export default function AutomationFlow() {
               nodeColor={(node) => {
                 if (node.type === "trigger") return "#34D399";
                 if (node.type === "selector") return "#9CA3AF";
-                if (node.type === "facebook") return "#1877F2";
-                if (node.type === "instagram") return "#E1306C";
+                if (node.type === "facebook") return "#0084FF";
+                if (node.type === "instagram") return "#E4405F";
                 if (node.type === "telegram") return "#37AEE2";
                 if (node.type === "sms") return "#34D399";
                 if (node.type === "email") return "#8B5CF6";

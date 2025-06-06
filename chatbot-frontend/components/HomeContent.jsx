@@ -1,6 +1,6 @@
 // HomeContent.jsx
 import React from 'react'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 
 const templates = [
@@ -32,10 +32,18 @@ export default function HomeContent() {
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <h1 className="text-3xl font-extrabold tracking-tight">Home</h1>
           {userName ? (
-            <p className="text-lg font-medium">Hello, {userName}!</p>
+            <div className="flex items-center space-x-4">
+              <p className="text-lg font-medium">Hello, {userName}!</p>
+              <button
+                onClick={() => signOut({ callbackUrl: '/login' })}
+                className="bg-red-500 hover:bg-red-600 text-white font-medium px-4 py-2 rounded-md transition duration-200"
+              >
+                Logout
+              </button>
+            </div>
           ) : (
-            <Link href="/login" className="text-white hover:underline font-medium">
-              Log in
+            <Link href="/login">
+              <a className="text-white hover:underline font-medium">Log in</a>
             </Link>
           )}
         </div>
