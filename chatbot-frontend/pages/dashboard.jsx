@@ -1,7 +1,7 @@
 // pages/dashboard.jsx
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/router'
-import Cookies from 'js-cookie'
+import { useSession } from 'next-auth/react'
 
 import DashboardLayout    from '../components/DashboardLayout'
 import HomeContent         from '../components/HomeContent'
@@ -14,39 +14,10 @@ import { userMenu }        from '../data/menus'
 
 export default function UserDashboard() {
   const router = useRouter()
-  const [loading, setLoading] = useState(true)
+  const { data: session, status } = useSession()
 
-  useEffect(() => {
-    // 1. Get our custom JWT cookie
-    const token = Cookies.get('token')
-    if (!token) {
-      // No token → not logged in → redirect to /login
-      router.replace('/login')
-      return
-    }
-
-    try {
-      // 2. Manually decode the payload:
-      const payloadJson = atob(token.split('.')[1])
-      const payload = JSON.parse(payloadJson)
-      // Expecting payload.role to exist
-      if (payload.role !== 'user') {
-        // Not a "user" → redirect to /login
-        router.replace('/login')
-        return
-      }
-
-      // If we reach here, role === 'user', so allow rendering
-      setLoading(false)
-    } catch (err) {
-      // Invalid token or parse error → redirect
-      console.error('Invalid token or parsing error:', err)
-      router.replace('/login')
-    }
-  }, [router])
-
-  // 3. While checking, show loading
-  if (loading) {
+  // 1) While NextAuth is checking your session
+  if (status === 'loading') {
     return (
       <div className="flex items-center justify-center h-screen">
         Loading…
@@ -54,7 +25,15 @@ export default function UserDashboard() {
     )
   }
 
-  // 4. Render the user dashboard layout
+  // 2) If not signed in, or not a “user”, redirect to /login
+  if (!session || session.user.role !== 'user') {
+    useEffect(() => {
+      router.replace('/login')
+    }, [router])
+    return null
+  }
+
+  // 3) Authenticated as “user” → render the dashboard
   return (
     <DashboardLayout menuItems={userMenu}>
       {(selected) => {

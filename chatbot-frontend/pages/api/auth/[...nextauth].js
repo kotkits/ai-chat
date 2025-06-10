@@ -3,49 +3,72 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import { MongoClient } from "mongodb"
 import bcrypt from "bcrypt"
 
-const client = new MongoClient(process.env.MONGODB_URI)
+// reuse a single MongoClient (no reconnect storm)
+const clientPromise = new MongoClient(process.env.MONGODB_URI, {
+  // (optional) you can pass options here
+}).connect()
 
 export default NextAuth({
+  // ← be sure you have this in your .env.local
+  secret: process.env.NEXTAUTH_SECRET,
+
+  // session via JWT
   session: {
-    strategy: "jwt",        // use JSON Web Token sessions
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60,
   },
+
   providers: [
     CredentialsProvider({
       name: "Credentials",
       credentials: {
         identifier: { label: "Username or Email", type: "text" },
-        password: { label: "Password", type: "password" }
+        password:    { label: "Password",         type: "password" },
       },
       async authorize(credentials) {
         const { identifier, password } = credentials
+        console.log("Credentials authorize() got:", { identifier })
 
-        // 1) Admin shortcut
+        // 1) admin shortcut
         if (
           identifier === process.env.ADMIN_USERNAME &&
-          password === process.env.ADMIN_PASSWORD
+          password   === process.env.ADMIN_PASSWORD
         ) {
           return { id: "admin", name: "Administrator", role: "admin" }
         }
 
-        // 2) User lookup
-        await client.connect()
-        const db = client.db()
+        // 2) look up user in MongoDB
+        const client = await clientPromise
+        const db = client.db()                  // uses default DB in your URI
         const user = await db.collection("users").findOne({
-          $or: [{ email: identifier }, { username: identifier }]
+          $or: [
+            { email:    identifier },
+            { username: identifier }
+          ]
         })
-        if (!user) throw new Error("Invalid credentials")
+
+        if (!user) {
+          console.log("→ no user found for", identifier)
+          return null                // ← return null (not throw!), so NextAuth returns 401
+        }
 
         const isValid = await bcrypt.compare(password, user.password)
-        if (!isValid) throw new Error("Invalid credentials")
+        if (!isValid) {
+          console.log("→ invalid password for", identifier)
+          return null
+        }
 
-        // Return user object – NextAuth puts this into the JWT
-        return { id: user._id.toString(), name: user.username, role: user.role || "user" }
+        // successful—NextAuth will issue the JWT
+        return {
+          id:   user._id.toString(),
+          name: user.username,
+          role: user.role || "user"
+        }
       }
     })
   ],
+
   callbacks: {
-    // Add `role` into the session object
     async jwt({ token, user }) {
       if (user) token.role = user.role
       return token
@@ -55,8 +78,9 @@ export default NextAuth({
       return session
     }
   },
+
   pages: {
     signIn: "/login",
-    error: "/login" // display errors on the login page
+    error:  "/login"   // errors (including invalid credentials) will redirect here
   }
 })
