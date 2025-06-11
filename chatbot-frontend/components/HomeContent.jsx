@@ -1,4 +1,3 @@
-// HomeContent.jsx
 import React from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
@@ -76,14 +75,7 @@ export default function HomeContent() {
           <p className="text-gray-600 text-md max-w-2xl mx-auto">
             We're continuously expanding. New interactive templates and automation tools are on the way. Stay tuned!
           </p>
-          {/* Button added at bottom of Growth Goals */}
-          <div className="mt-6">
-            <Link href="/automation">
-              <button className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-indigo-600 hover:to-purple-500 text-white font-bold px-8 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300 ease-in-out">
-                🚀 Get Started
-              </button>
-            </Link>
-          </div>
+          {/* Removed Get Started button as requested */}
         </section>
       </main>
     </div>

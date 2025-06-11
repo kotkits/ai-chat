@@ -1407,6 +1407,8 @@ export default function AutomationFlow() {
     setEdges((eds) => addEdge(params, eds));
   }, [setEdges]);
 
+  
+
   //
   // ─── spawnSelector ──────────────────────────────────────────────────────────
   // When a Trigger node’s “+ New Trigger” is clicked, create a Selector node
@@ -1527,15 +1529,7 @@ export default function AutomationFlow() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      {/* Top bar with Back button */}
-      <div className="p-4 bg-white dark:bg-gray-800 border-b dark:border-gray-700">
-        <button
-          onClick={() => router.back()}
-          className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow"
-        >
-          ← Back
-        </button>
-      </div>
+
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}

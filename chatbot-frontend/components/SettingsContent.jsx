@@ -1,6 +1,6 @@
 // components/SettingsContent.jsx
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, } from 'react'
 import { RiInstagramLine } from 'react-icons/ri'
 import { SiTiktok } from 'react-icons/si'
 import {
