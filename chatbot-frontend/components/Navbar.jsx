@@ -1,35 +1,27 @@
 // components/Navbar.jsx
-import React from 'react'
-import { signOut } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react';
+import { Menu as MenuIcon } from 'lucide-react';
 
 export default function Navbar({ toggleSidebar }) {
-  return (
-    <nav className="h-16 bg-white border-b border-gray-200 shadow-sm flex items-center justify-between px-4 md:px-6 z-50">
-      {/* Left: Brand and Sidebar Toggle */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={toggleSidebar}
-          aria-label="Toggle sidebar"
-          className="text-gray-500 hover:text-primary transition md:hidden"
-        >
-          <span className="material-symbols-outlined text-2xl">menu</span>
-        </button>
-        <h1 className="text-lg font-semibold text-gray-800 tracking-tight">
-          Chatbot Dashboard
-        </h1>
-      </div>
+  const { data: session } = useSession();
 
-      {/* Right: User Actions */}
-      <div className="flex items-center gap-3">
-        {/* Optional: Add a theme toggle here */}
+  return (
+    <nav className="flex items-center justify-between px-6 py-4 bg-white dark:bg-gray-800 shadow">
+      <button
+        onClick={toggleSidebar}
+        className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
+      >
+        <MenuIcon className="w-6 h-6" />
+      </button>
+      <div className="flex items-center space-x-4">
+        <span className="font-medium">{session?.user?.name}</span>
         <button
           onClick={() => signOut({ callbackUrl: '/login' })}
-          className="flex items-center gap-2 bg-primary text-white px-3 py-2 rounded-md hover:bg-primary-dark transition"
+          className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
         >
-          <span className="material-symbols-outlined text-base">logout</span>
-          <span className="text-sm hidden sm:inline">Sign Out</span>
+          Sign Out
         </button>
       </div>
     </nav>
-  )
+  );
 }

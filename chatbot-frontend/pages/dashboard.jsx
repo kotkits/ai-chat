@@ -1,52 +1,55 @@
 // pages/dashboard.jsx
-import { useEffect } from 'react'
-import { useRouter } from 'next/router'
-import { useSession } from 'next-auth/react'
+import { getSession } from 'next-auth/react'
+import DashboardLayout from '../components/DashboardLayout'
 
-import DashboardLayout    from '../components/DashboardLayout'
 import HomeContent         from '../components/HomeContent'
 import ContactsContent     from '../components/ContactsContent'
 import AutomationContent   from '../components/AutomationContent'
 import LiveChatContent     from '../components/LiveChatContent'
 import BroadcastingContent from '../components/BroadcastingContent'
 import SettingsContent     from '../components/SettingsContent'
-import { userMenu }        from '../data/menus'
 
-export default function UserDashboard() {
-  const router = useRouter()
-  const { data: session, status } = useSession()
+import { userMenu } from '../data/menus'
 
-  // 1) While NextAuth is checking your session
-  if (status === 'loading') {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        Loading…
-      </div>
-    )
-  }
-
-  // 2) If not signed in, or not a “user”, redirect to /login
-  if (!session || session.user.role !== 'user') {
-    useEffect(() => {
-      router.replace('/login')
-    }, [router])
-    return null
-  }
-
-  // 3) Authenticated as “user” → render the dashboard
+export default function DashboardPage({ session }) {
   return (
     <DashboardLayout menuItems={userMenu}>
-      {(selected) => {
+      {(selected, setSelected) => {
         switch (selected) {
-          case 'home':         return <HomeContent />
-          case 'contacts':     return <ContactsContent />
-          case 'automation':   return <AutomationContent />
-          case 'livechat':     return <LiveChatContent />
-          case 'broadcasting': return <BroadcastingContent />
-          case 'settings':     return <SettingsContent />
-          default:             return <HomeContent />
+          case 'home':
+            return (
+              <HomeContent
+                onStart={() => setSelected('automation')}
+              />
+            )
+          case 'contacts':
+            return <ContactsContent />
+          case 'automation':
+            return <AutomationContent />
+          case 'livechat':
+            return <LiveChatContent />
+          case 'broadcasting':
+            return <BroadcastingContent />
+          case 'settings':
+            return <SettingsContent />
+          default:
+            return (
+              <HomeContent
+                onStart={() => setSelected('automation')}
+              />
+            )
         }
       }}
     </DashboardLayout>
   )
+}
+
+export async function getServerSideProps(ctx) {
+  const session = await getSession(ctx)
+  if (!session) {
+    return {
+      redirect: { destination: '/login', permanent: false }
+    }
+  }
+  return { props: { session } }
 }
