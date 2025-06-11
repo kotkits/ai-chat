@@ -1,63 +1,65 @@
 // pages/admin.jsx
-import { useEffect } from 'react'
-import { useRouter } from 'next/router'
-import { useSession } from 'next-auth/react'
+import { getSession } from 'next-auth/react'
+import DashboardLayout from '../components/DashboardLayout'
 
-import DashboardLayout     from '../components/DashboardLayout'
+// user pages
 import HomeContent         from '../components/HomeContent'
 import ContactsContent     from '../components/ContactsContent'
 import AutomationContent   from '../components/AutomationContent'
 import LiveChatContent     from '../components/LiveChatContent'
 import BroadcastingContent from '../components/BroadcastingContent'
 import SettingsContent     from '../components/SettingsContent'
-import AdminUsers          from '../components/AdminUsers'
-import AuditLogs           from '../components/AuditLogs'
-import AdminSettings       from '../components/AdminSettings'
-import { adminFullMenu }   from '../data/menus'
 
-export default function AdminDashboard() {
-  const router = useRouter()
-  const { data: session, status } = useSession()
+// admin pages
+import AdminUsers      from '../components/AdminUsers'
+import AuditLogs       from '../components/AuditLogs'
+import AdminSettings   from '../components/AdminSettings'
 
-  // If NextAuth is still loading the session, show nothing (or a spinner)
-  if (status === 'loading') {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        Loading…
-      </div>
-    )
-  }
+// menus
+import { userMenu, adminFullMenu } from '../data/menus'
 
-  // If there is no session or the role isn’t "admin", redirect to /login
-  if (!session || session.user.role !== 'admin') {
-    useEffect(() => {
-      router.replace('/login')
-    }, [router])
-    return null
-  }
+export default function AdminPage({ session }) {
+  // 1) Merge user + admin items
+  const menuItems = [...userMenu, ...adminFullMenu]
 
-  // At this point, we know the user is authenticated and has role "admin"
   return (
-    <DashboardLayout menuItems={adminFullMenu}>
-      {(selected) => {
+    <DashboardLayout menuItems={menuItems}>
+      {selected => {
+        // 2) Render user pages
         switch (selected) {
-          // user‐portal items (admins can still access these)
-          case 'home':         return <HomeContent />
-          case 'contacts':     return <ContactsContent />
-          case 'automation':   return <AutomationContent />
-          case 'livechat':     return <LiveChatContent />
-          case 'broadcasting': return <BroadcastingContent />
-          case 'settings':     return <SettingsContent />
+          case 'home':
+            return <HomeContent />
+          case 'contacts':
+            return <ContactsContent />
+          case 'automation':
+            return <AutomationContent />
+          case 'livechat':
+            return <LiveChatContent />
+          case 'broadcasting':
+            return <BroadcastingContent />
+          case 'settings':
+            return <SettingsContent />
 
-          // admin‐only items
-          case 'users':          return <AdminUsers />
-          case 'logs':           return <AuditLogs />
-          case 'settings_admin': return <AdminSettings />
+          // 3) Render admin pages
+          case 'users':
+            return <AdminUsers />
+          case 'logs':
+            return <AuditLogs />
+          case 'settings_admin':
+            return <AdminSettings />
 
-          // default to home
-          default: return <HomeContent />
+          default:
+            return <p className="text-gray-500">Select a section</p>
         }
       }}
     </DashboardLayout>
   )
+}
+
+export async function getServerSideProps(ctx) {
+  const session = await getSession(ctx)
+  if (!session || session.user.role !== 'admin') {
+    return { redirect: { destination: '/dashboard', permanent: false } }
+  }
+  return { props: { session } }
 }

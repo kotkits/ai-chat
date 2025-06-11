@@ -1,22 +1,26 @@
 // data/menus.js
+import {
+  Home,
+  Users,
+  LayoutGrid,
+  MessageSquare,
+  Megaphone,
+  Settings,
+  FileText,
+  Cog
+} from 'lucide-react';
 
 export const userMenu = [
-  { key: 'home',         label: 'Home',              icon: 'home' },
-  { key: 'contacts',     label: 'Contacts',          icon: 'group' },
-  { key: 'automation',   label: 'Automation',        icon: 'settings_suggest' },
-  { key: 'livechat',     label: 'Live Chat',         icon: 'chat_bubble' },
-  { key: 'broadcasting', label: 'Broadcasting',      icon: 'send' },
-  { key: 'settings',     label: 'Settings',          icon: 'settings' },
-]
+  { key: 'home',         label: 'Home',       icon: Home          },
+  { key: 'contacts',     label: 'Contacts',   icon: Users         },
+  { key: 'automation',   label: 'Automation', icon: LayoutGrid    },
+  { key: 'livechat',     label: 'Live Chat',  icon: MessageSquare },
+  { key: 'broadcasting', label: 'Broadcast',  icon: Megaphone     },
+  { key: 'settings',     label: 'Settings',   icon: Settings      }
+];
 
-export const adminMenu = [
-  { key: 'users',         label: 'User Management', icon: 'group' },
-  { key: 'logs',          label: 'Audit Logs',      icon: 'history' },
-  { key: 'settings_admin',label: 'System Settings', icon: 'settings' },
-]
-
-// adminFullMenu will be used by the admin portal to show both sets:
 export const adminFullMenu = [
-  ...userMenu,
-  ...adminMenu,
-]
+  { key: 'users',           label: 'Users',          icon: Users    },
+  { key: 'logs',            label: 'Logs',           icon: FileText },
+  { key: 'settings_admin',  label: 'Admin Settings', icon: Cog      }
+];
