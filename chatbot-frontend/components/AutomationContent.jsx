@@ -150,15 +150,15 @@ const TriggerNode = React.memo(
 
         {/* Resize handle (tiny green square) */}
         <div
-          onMouseDown={onResizeMouseDown}
-          className="absolute bottom-2 right-2 w-3 h-3 bg-green-400 cursor-se-resize rounded-sm"
-          title="Drag to resize"
+          // onMouseDown={onResizeMouseDown}
+          // className="absolute bottom-2 right-2 w-3 h-3 bg-green-400 cursor-se-resize rounded-sm"
+          // title="Drag to resize"
         />
       </div>
     );
   },
-  (prev, next) =>
-    prev.data.width === next.data.width && prev.data.height === next.data.height
+  // (prev, next) =>
+  //   prev.data.width === next.data.width && prev.data.height === next.data.height
 );
 
 //
@@ -468,6 +468,17 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }
         style={{ background: "#34D399", width: 10, height: 10 }}
       />
 
+      
+       {/* Bottom-right “Next Step →” handle */}
+        <div className="absolute bottom-[-1px] right-2 flex items-center space-x-1">
+          <Handle
+            type="source"
+            position="bottom"
+            id="out"
+          />
+          <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
+        </div>
+
 
       {/* Header row: circular Messenger icon + “Send Message” */}
       <div className="flex items-center space-x-2 mb-2">
@@ -483,7 +494,7 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }
           </svg>
         </div>
         <span className="text-base font-medium text-gray-800 dark:text-gray-200">
-          Send Message
+          Messenger
         </span>
       </div>
 
@@ -543,9 +554,9 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }
 
       {/* Resize handle */}
       <div
-        onMouseDown={onResizeMouseDown}
-        className="absolute bottom-2 right-2 w-3 h-3 bg-green-400 cursor-se-resize rounded-sm"
-        title="Drag to resize"
+        // onMouseDown={onResizeMouseDown}
+        // className="absolute bottom-2 right-2 w-3 h-3 bg-green-400 cursor-se-resize rounded-sm"
+        // title="Drag to resize"
       />
     </div>
   );
@@ -656,6 +667,17 @@ const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data
         style={{ background: "#34D399", width: 10, height: 10 }}
       />
 
+      
+       {/* Bottom-right “Next Step →” handle */}
+        <div className="absolute bottom-[-1px] right-2 flex items-center space-x-1">
+          <Handle
+            type="source"
+            position="bottom"
+            id="out"
+          />
+          <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
+        </div>
+
       {/* Header row: Instagram gradient circle + “Send Message” */}
       <div className="flex items-center space-x-2 mb-2">
         <div
@@ -674,7 +696,7 @@ const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data
           </svg>
         </div>
         <span className="text-base font-medium text-gray-800 dark:text-gray-200">
-          Send Message
+          Instagram
         </span>
       </div>
 
@@ -734,9 +756,9 @@ const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data
 
       {/* Resize handle */}
       <div
-        onMouseDown={onResizeMouseDown}
-        className="absolute bottom-2 right-2 w-3 h-3 bg-green-400 cursor-se-resize rounded-sm"
-        title="Drag to resize"
+        // onMouseDown={onResizeMouseDown}
+        // className="absolute bottom-2 right-2 w-3 h-3 bg-green-400 cursor-se-resize rounded-sm"
+        // title="Drag to resize"
       />
     </div>
   );
@@ -847,6 +869,17 @@ const TelegramMessageNode = React.memo(function TelegramMessageNode({ id, data }
         style={{ background: "#34D399", width: 10, height: 10 }}
       />
 
+      
+       {/* Bottom-right “Next Step →” handle */}
+        <div className="absolute bottom-[-1px] right-2 flex items-center space-x-1">
+          <Handle
+            type="source"
+            position="bottom"
+            id="out"
+          />
+          <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
+        </div>
+
       {/* Header row: Telegram circle + “Send Message” */}
       <div className="flex items-center space-x-2 mb-2">
         <div className="h-6 w-6 flex-shrink-0 rounded-full flex items-center justify-center bg-[#37AEE2]">
@@ -859,7 +892,7 @@ const TelegramMessageNode = React.memo(function TelegramMessageNode({ id, data }
           </svg>
         </div>
         <span className="text-base font-medium text-gray-800 dark:text-gray-200">
-          Send Message
+          Telegram
         </span>
       </div>
 
@@ -919,9 +952,9 @@ const TelegramMessageNode = React.memo(function TelegramMessageNode({ id, data }
 
       {/* Resize handle */}
       <div
-        onMouseDown={onResizeMouseDown}
-        className="absolute bottom-2 right-2 w-3 h-3 bg-green-400 cursor-se-resize rounded-sm"
-        title="Drag to resize"
+        // onMouseDown={onResizeMouseDown}
+        // className="absolute bottom-2 right-2 w-3 h-3 bg-green-400 cursor-se-resize rounded-sm"
+        // title="Drag to resize"
       />
     </div>
   );
@@ -1032,6 +1065,17 @@ const SMSMessageNode = React.memo(function SMSMessageNode({ id, data }) {
         style={{ background: "#34D399", width: 10, height: 10 }}
       />
 
+      
+       {/* Bottom-right “Next Step →” handle */}
+          <div className="absolute bottom-[-1px] right-2 flex items-center space-x-1">
+            <Handle
+              type="source"
+              position="bottom"
+              id="out"
+            />
+            <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
+          </div>
+
       {/* Header row: SMS circle + “Send Message” */}
       <div className="flex items-center space-x-2 mb-2">
         <div className="h-6 w-6 flex-shrink-0 rounded-full flex items-center justify-center bg-[#34D399]">
@@ -1044,7 +1088,7 @@ const SMSMessageNode = React.memo(function SMSMessageNode({ id, data }) {
           </svg>
         </div>
         <span className="text-base font-medium text-gray-800 dark:text-gray-200">
-          Send Message
+          SMS
         </span>
       </div>
 
@@ -1104,9 +1148,9 @@ const SMSMessageNode = React.memo(function SMSMessageNode({ id, data }) {
 
       {/* Resize handle */}
       <div
-        onMouseDown={onResizeMouseDown}
-        className="absolute bottom-2 right-2 w-3 h-3 bg-green-400 cursor-se-resize rounded-sm"
-        title="Drag to resize"
+        // onMouseDown={onResizeMouseDown}
+        // className="absolute bottom-2 right-2 w-3 h-3 bg-green-400 cursor-se-resize rounded-sm"
+        // title="Drag to resize"
       />
     </div>
   );
@@ -1217,6 +1261,17 @@ const EmailMessageNode = React.memo(function EmailMessageNode({ id, data }) {
         style={{ background: "#34D399", width: 10, height: 10 }}
       />
 
+      
+       {/* Bottom-right “Next Step →” handle */}
+        <div className="absolute bottom-[-1px] right-2 flex items-center space-x-1">
+          <Handle
+            type="source"
+            position="bottom"
+            id="out"
+          />
+          <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
+        </div>
+
       {/* Header row: Email circle + “Send Message” */}
       <div className="flex items-center space-x-2 mb-2">
         <div className="h-6 w-6 flex-shrink-0 rounded-full flex items-center justify-center bg-[#8B5CF6]">
@@ -1229,7 +1284,7 @@ const EmailMessageNode = React.memo(function EmailMessageNode({ id, data }) {
           </svg>
         </div>
         <span className="text-base font-medium text-gray-800 dark:text-gray-200">
-          Send Message
+          Email
         </span>
       </div>
 
@@ -1272,14 +1327,14 @@ const EmailMessageNode = React.memo(function EmailMessageNode({ id, data }) {
       </div>
 
      {/* Bottom “Next Step →” handle */}
-<div className="absolute bottom-[-5px] left-1/2 transform -translate-x-1/2 flex flex-col items-center space-y-1">
-{/* Bottom outgoing handle for chaining */}
-<Handle
-  type="source"
-  position="bottom"
-  id="out"
-  style={{ background: "#9CA3AF", width: 10, height: 10 }}
-/>
+      <div className="absolute bottom-[-5px] left-1/2 transform -translate-x-1/2 flex flex-col items-center space-y-1">
+      {/* Bottom outgoing handle for chaining */}
+      <Handle
+        type="source"
+        position="bottom"
+        id="out"
+        style={{ background: "#9CA3AF", width: 10, height: 10 }}
+      />
 
   <span className="mt-1 text-xs text-gray-700 dark:text-gray-300"></span>
 </div>
@@ -1287,9 +1342,9 @@ const EmailMessageNode = React.memo(function EmailMessageNode({ id, data }) {
 
       {/* Resize handle */}
       <div
-        onMouseDown={onResizeMouseDown}
-        className="absolute bottom-2 right-2 w-3 h-3 bg-green-400 cursor-se-resize rounded-sm"
-        title="Drag to resize"
+        // onMouseDown={onResizeMouseDown}
+        // className="absolute bottom-2 right-2 w-3 h-3 bg-green-400 cursor-se-resize rounded-sm"
+        // title="Drag to resize"
       />
     </div>
   );
