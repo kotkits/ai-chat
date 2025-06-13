@@ -1,21 +1,15 @@
-// File: pages/api/settings/general.js
+// File: pages/api/settings/notifications.js
 import clientPromise from '../../../lib/mongodb';
 
 export default async function handler(req, res) {
-  const namespace = 'general';
+  const namespace = 'notifications';
   const client = await clientPromise;
   const db = client.db();
   const coll = db.collection('settings');
 
   if (req.method === 'GET') {
     const doc = await coll.findOne({ namespace });
-    const defaultPayload = {
-      botName: '',
-      language: 'en',
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      defaultReply: '',
-      retentionDays: 30
-    };
+    const defaultPayload = { desktop: [], emailSms: [] };
     return res.status(200).json(doc?.payload || defaultPayload);
   }
 
@@ -26,7 +20,7 @@ export default async function handler(req, res) {
       { $set: { payload, updatedAt: new Date() } },
       { upsert: true }
     );
-    return res.status(200).json({ message: 'General settings saved' });
+    return res.status(200).json({ message: 'Notifications settings saved' });
   }
 
   res.setHeader('Allow', ['GET', 'PUT']);
