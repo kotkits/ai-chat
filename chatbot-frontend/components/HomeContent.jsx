@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-=======
-// components/HomeContent.jsx
->>>>>>> 80f6715a1aff7ee9465db60a27582d47ac9afd56
+
 import React from 'react'
 import { useSession } from 'next-auth/react'
 
@@ -57,16 +54,7 @@ export default function HomeContent({ onStart }) {
           <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
             We're continuously expanding. New interactive tools are on the way.
           </p>
-<<<<<<< HEAD
-          {/* Removed Get Started button as requested */}
-=======
-          <button
-            onClick={onStart}
-            className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold px-8 py-3 rounded-full shadow hover:shadow-xl transform hover:scale-105 transition"
-          >
-            🚀 Get Started
-          </button>
->>>>>>> 80f6715a1aff7ee9465db60a27582d47ac9afd56
+          
         </section>
       </main>
     </div>

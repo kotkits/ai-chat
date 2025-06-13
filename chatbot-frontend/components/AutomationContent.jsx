@@ -1,9 +1,13 @@
 // File: components/AutomationContent.jsx
-
-import React, { useCallback, useState, useEffect, useRef } from "react";
+import React, {
+  useCallback,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
 import { useRouter } from "next/router";
 import ReactFlow, {
-  MiniMap,
+  
   Controls,
   Background,
   addEdge,
@@ -12,6 +16,15 @@ import ReactFlow, {
   useEdgesState,
 } from "reactflow";
 import "reactflow/dist/style.css";
+
+const TopHandle = ({ color = "#9CA3AF" }) => (
+  <Handle type="target" position="top" id="in" style={{ background: color, width: 10, height: 10 }} />
+);
+
+const BottomHandle = ({ color = "#9CA3AF" }) => (
+  <Handle type="source" position="bottom" id="out" style={{ background: color, width: 10, height: 10 }} />
+);
+
 
 //
 // ─── TriggerNode ────────────────────────────────────────────────────────────
@@ -85,6 +98,14 @@ const TriggerNode = React.memo(
           style={{ background: "#34D399", width: 10, height: 10 }}
         />
 
+        {/* Bottom handle (outgoing) */}
+      <Handle
+        type="source"
+        position="bottom"
+        id="out"
+        style={{ background: "#34D399", width: 10, height: 10 }}
+      />
+
         {/* Header row: ⚡ When… */}
         <div className="flex items-center mb-2">
           <span className="text-2xl text-green-500 mr-2">⚡</span>
@@ -116,16 +137,16 @@ const TriggerNode = React.memo(
           </button>
         </div>
 
-        {/* Right‐side “Next Step →” handle */}
-        <div className="absolute right-[-5px] top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
-          <Handle
-            type="source"
-            position="right"
-            id="out"
-            style={{ background: "#34D399", width: 10, height: 10 }}
-          />
-          <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
-        </div>
+       {/* Bottom-right “Next Step →” handle */}
+<div className="absolute bottom-[-1px] right-2 flex items-center space-x-1">
+  <Handle
+    type="source"
+    position="bottom"
+    id="out"
+  />
+  <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
+</div>
+
 
         {/* Resize handle (tiny green square) */}
         <div
@@ -439,6 +460,15 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }
         style={{ background: "#0084FF", width: 10, height: 10 }}
       />
 
+      {/* Bottom handle (outgoing) */}
+      <Handle
+        type="source"
+        position="bottom"
+        id="out"
+        style={{ background: "#34D399", width: 10, height: 10 }}
+      />
+
+
       {/* Header row: circular Messenger icon + “Send Message” */}
       <div className="flex items-center space-x-2 mb-2">
         <div
@@ -616,6 +646,14 @@ const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data
         position="top"
         id="in"
         style={{ background: "#E4405F", width: 10, height: 10 }}
+      />
+
+           {/* Bottom handle (outgoing) */}
+      <Handle
+        type="source"
+        position="bottom"
+        id="out"
+        style={{ background: "#34D399", width: 10, height: 10 }}
       />
 
       {/* Header row: Instagram gradient circle + “Send Message” */}
@@ -801,6 +839,14 @@ const TelegramMessageNode = React.memo(function TelegramMessageNode({ id, data }
         style={{ background: "#37AEE2", width: 10, height: 10 }}
       />
 
+           {/* Bottom handle (outgoing) */}
+      <Handle
+        type="source"
+        position="bottom"
+        id="out"
+        style={{ background: "#34D399", width: 10, height: 10 }}
+      />
+
       {/* Header row: Telegram circle + “Send Message” */}
       <div className="flex items-center space-x-2 mb-2">
         <div className="h-6 w-6 flex-shrink-0 rounded-full flex items-center justify-center bg-[#37AEE2]">
@@ -978,6 +1024,14 @@ const SMSMessageNode = React.memo(function SMSMessageNode({ id, data }) {
         style={{ background: "#34D399", width: 10, height: 10 }}
       />
 
+           {/* Bottom handle (outgoing) */}
+      <Handle
+        type="source"
+        position="bottom"
+        id="out"
+        style={{ background: "#34D399", width: 10, height: 10 }}
+      />
+
       {/* Header row: SMS circle + “Send Message” */}
       <div className="flex items-center space-x-2 mb-2">
         <div className="h-6 w-6 flex-shrink-0 rounded-full flex items-center justify-center bg-[#34D399]">
@@ -1036,7 +1090,7 @@ const SMSMessageNode = React.memo(function SMSMessageNode({ id, data }) {
       <div className="absolute right-[-6px] top-1/2 transform -translate-y-1/2">
         <Handle
           type="source"
-          position="right"
+          position="bottom"
           id="out"
           style={{
             background: "#FFFFFF",
@@ -1155,6 +1209,14 @@ const EmailMessageNode = React.memo(function EmailMessageNode({ id, data }) {
         style={{ background: "#8B5CF6", width: 10, height: 10 }}
       />
 
+           {/* Bottom handle (outgoing) */}
+      <Handle
+        type="source"
+        position="bottom"
+        id="out"
+        style={{ background: "#34D399", width: 10, height: 10 }}
+      />
+
       {/* Header row: Email circle + “Send Message” */}
       <div className="flex items-center space-x-2 mb-2">
         <div className="h-6 w-6 flex-shrink-0 rounded-full flex items-center justify-center bg-[#8B5CF6]">
@@ -1209,21 +1271,19 @@ const EmailMessageNode = React.memo(function EmailMessageNode({ id, data }) {
         )}
       </div>
 
-      {/* Right‐side outgoing handle (bare circle) */}
-      <div className="absolute right-[-6px] top-1/2 transform -translate-y-1/2">
-        <Handle
-          type="source"
-          position="right"
-          id="out"
-          style={{
-            background: "#FFFFFF",
-            width: 12,
-            height: 12,
-            border: "2px solid #8B5CF6",
-            borderRadius: "50%",
-          }}
-        />
-      </div>
+     {/* Bottom “Next Step →” handle */}
+<div className="absolute bottom-[-5px] left-1/2 transform -translate-x-1/2 flex flex-col items-center space-y-1">
+{/* Bottom outgoing handle for chaining */}
+<Handle
+  type="source"
+  position="bottom"
+  id="out"
+  style={{ background: "#9CA3AF", width: 10, height: 10 }}
+/>
+
+  <span className="mt-1 text-xs text-gray-700 dark:text-gray-300"></span>
+</div>
+
 
       {/* Resize handle */}
       <div
@@ -1348,248 +1408,107 @@ function getId() {
   return `node_${idCounter++}`;
 }
 
-//
-// ─── Main Component: AutomationFlow ─────────────────────────────────────────
 export default function AutomationFlow() {
   const router = useRouter();
-
-  // Start with an empty canvas:
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNodeIds, setSelectedNodeIds] = useState([]);
 
-  // Handler for editing any node’s text field:
-  const handleLabelChange = useCallback(
-    (id, value) => {
-      setNodes((nds) =>
-        nds.map((n) =>
-          n.id === id
-            ? {
-                ...n,
-                data: {
-                  ...n.data,
-                  label: value,
-                  onChange: handleLabelChange,
-                },
-              }
-            : n
-        )
-      );
-    },
-    [setNodes]
-  );
+  const handleLabelChange = useCallback((id, value) => {
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === id
+          ? { ...n, data: { ...n.data, label: value, onChange: handleLabelChange } }
+          : n
+      )
+    );
+  }, [setNodes]);
 
-  // Resize callback (for both Trigger and message nodes):
-  const handleResize = useCallback(
-    (id, newW, newH) => {
-      setNodes((nds) =>
-        nds.map((n) =>
-          n.id === id
-            ? {
-                ...n,
-                data: {
-                  ...n.data,
-                  width: newW,
-                  height: newH,
-                  onResize: handleResize,
-                  onAddTrigger: n.type === "trigger" ? spawnSelector : n.data.onAddTrigger,
-                },
-              }
-            : n
-        )
-      );
-    },
-    [setNodes]
-  );
+  const handleResize = useCallback((id, newW, newH) => {
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === id
+          ? {
+              ...n,
+              data: {
+                ...n.data,
+                width: newW,
+                height: newH,
+                onResize: handleResize,
+                onAddTrigger: n.type === "trigger" ? spawnSelector : n.data.onAddTrigger,
+              },
+            }
+          : n
+      )
+    );
+  }, [setNodes]);
 
-  // Called whenever you draw a connection by hand:
   const onConnect = useCallback((params) => {
     setEdges((eds) => addEdge(params, eds));
   }, [setEdges]);
 
-  
+  const spawnSelector = useCallback((triggerId) => {
+    setNodes((nds) => {
+      const triggerNode = nds.find((n) => n.id === triggerId);
+      if (!triggerNode) return nds;
+      const newSelectorId = getId();
+      const newSelector = {
+        id: newSelectorId,
+        type: "selector",
+        data: { width: 200, height: 300, onSelect: (choiceLabel) => spawnBranchNode(choiceLabel, newSelectorId) },
+        position: { x: triggerNode.position.x + triggerNode.data.width + 50, y: triggerNode.position.y },
+      };
+      setEdges((prev) =>
+        addEdge({ id: `edge_${triggerId}_${newSelectorId}`, source: triggerId, sourceHandle: "out", target: newSelectorId, targetHandle: "in", type: "smoothstep" }, prev)
+      );
+      return [...nds, newSelector];
+    });
+  }, [setNodes, setEdges]);
 
-  //
-  // ─── spawnSelector ──────────────────────────────────────────────────────────
-  // When a Trigger node’s “+ New Trigger” is clicked, create a Selector node
-  // directly to the right of it AND immediately connect them with an edge
-  // (from Trigger’s right handle → Selector’s top handle).
-  //
-  const spawnSelector = useCallback(
-    (triggerId) => {
-      setNodes((nds) => {
-        const triggerNode = nds.find((n) => n.id === triggerId);
-        if (!triggerNode) return nds;
+  const spawnBranchNode = useCallback((label, selectorId) => {
+    setNodes((nds) => {
+      const selector = nds.find((n) => n.id === selectorId);
+      const newId = getId();
+      let nodeType = "ai";
+      let width = 300;
+      let height = 180;
+      switch (label) {
+        case "Messenger": nodeType = "facebook"; break;
+        case "Instagram": nodeType = "instagram"; break;
+        case "Telegram": nodeType = "telegram"; break;
+        case "SMS": nodeType = "sms"; break;
+        case "Email": nodeType = "email"; break;
+        default: nodeType = "ai"; break;
+      }
+      const newNode = {
+        id: newId,
+        type: nodeType,
+        data: { width, height, label: "", onResize: handleResize, onChange: handleLabelChange },
+        position: { x: selector ? selector.position.x + selector.data.width + 50 : 600, y: selector ? selector.position.y : 100 },
+      };
+      return [...nds, newNode];
+    });
+  }, [setNodes, handleResize, handleLabelChange]);
 
-        // 1) Create the new Selector node to the right of the Trigger:
-        const newSelectorId = getId();
-        const newSelector = {
-          id: newSelectorId,
-          type: "selector",
-          data: {
-            width: 200,
-            height: 300,
-            onSelect: (choiceLabel) => spawnBranchNode(choiceLabel, newSelectorId),
-          },
-          position: {
-            x: triggerNode.position.x + triggerNode.data.width + 50,
-            y: triggerNode.position.y,
-          },
-        };
-
-        // 2) Immediately add an edge from the Trigger → Selector:
-        setEdges((prevEdges) =>
-          addEdge(
-            {
-              id: `edge_${triggerId}_${newSelectorId}`,
-              source: triggerId,
-              sourceHandle: "out",
-              target: newSelectorId,
-              targetHandle: "in",
-              type: "smoothstep",
-            },
-            prevEdges
-          )
-        );
-
-        return [...nds, newSelector];
-      });
-    },
-    [setNodes, setEdges]
-  );
-
-  //
-  // ─── spawnBranchNode ────────────────────────────────────────────────────────
-  // Depending on the user’s choice (Messenger/Instagram/…), spawn the appropriate
-  // message-node and place it to the right of the Selector.
-  //
-  const spawnBranchNode = useCallback(
-    (label, selectorId) => {
-      setNodes((nds) => {
-        const selector = nds.find((n) => n.id === selectorId);
-        const newId = getId();
-        let nodeType = "ai";
-        let width = 300;
-        let height = 180;
-
-        switch (label) {
-          case "Messenger":
-            nodeType = "facebook";
-            break;
-          case "Instagram":
-            nodeType = "instagram";
-            break;
-          case "Telegram":
-            nodeType = "telegram";
-            break;
-          case "SMS":
-            nodeType = "sms";
-            break;
-          case "Email":
-            nodeType = "email";
-            break;
-          default:
-            nodeType = "ai";
-            break;
-        }
-
-        const newNode = {
-          id: newId,
-          type: nodeType,
-          data: {
-            width,
-            height,
-            label: "",
-            onResize: handleResize,
-            onChange: handleLabelChange,
-          },
-          position: {
-            x: selector ? selector.position.x + selector.data.width + 50 : 600,
-            y: selector ? selector.position.y : 100,
-          },
-        };
-        return [...nds, newNode];
-      });
-    },
-    [setNodes, handleResize, handleLabelChange]
-  );
-
-  // Delete all currently selected nodes (and their connecting edges):
   const deleteSelectedNodes = () => {
-    if (selectedNodeIds.length === 0) return;
+    if (!selectedNodeIds.length) return;
     setNodes((nds) => nds.filter((n) => !selectedNodeIds.includes(n.id)));
-    setEdges((eds) =>
-      eds.filter(
-        (e) =>
-          !selectedNodeIds.includes(e.source) && !selectedNodeIds.includes(e.target)
-      )
-    );
+    setEdges((eds) => eds.filter((e) => !selectedNodeIds.includes(e.source) && !selectedNodeIds.includes(e.target)));
     setSelectedNodeIds([]);
   };
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-
-
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
         <aside className="w-1/4 p-6 bg-white dark:bg-gray-800 border-r dark:border-gray-700 flex flex-col space-y-6 overflow-y-auto">
-          <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
-            ✨ Automation Builder
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
-            Click “+ New Trigger” below to add your first trigger.
-          </p>
-
-          {/* + New Trigger (in Sidebar) */}
+          <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">✨ Automation Builder</h2>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">Click “+ New Trigger” below to add your first trigger.</p>
           <div className="space-y-2">
             <div className="font-medium text-gray-700 dark:text-gray-300">When…</div>
-            <button
-              onClick={() => {
-                const newId = getId();
-                setNodes((nds) => [
-                  ...nds,
-                  {
-                    id: newId,
-                    type: "trigger",
-                    data: {
-                      width: 300,
-                      height: 160,
-                      onResize: handleResize,
-                      onAddTrigger: spawnSelector,
-                    },
-                    position: { x: 200, y: 20 + nds.length * 200 },
-                  },
-                ]);
-              }}
-              className="
-                w-full text-center
-                px-3 py-2
-                border-2 border-dashed border-green-400
-                rounded-lg text-green-600 font-semibold
-                hover:bg-green-50 dark:hover:bg-gray-700
-                transition
-              "
-            >
-              + New Trigger
-            </button>
+            <button onClick={() => { const newId = getId(); setNodes((nds) => [...nds, { id: newId, type: "trigger", data: { width: 300, height: 160, onResize: handleResize, onAddTrigger: spawnSelector }, position: { x: 200, y: 20 + nds.length * 200 } }]); }} className="w-full text-center px-3 py-2 border-2 border-dashed border-green-400 rounded-lg text-green-600 font-semibold hover:bg-green-50 dark:hover:bg-gray-700 transition">+ New Trigger</button>
           </div>
-
-          {/* Delete Selected Nodes */}
-          <button
-            onClick={deleteSelectedNodes}
-            disabled={selectedNodeIds.length === 0}
-            className="
-              mt-auto bg-red-600 text-white font-semibold
-              py-2 px-4 rounded-lg hover:bg-red-700
-              transition disabled:opacity-50
-            "
-          >
-            🗑 Delete Selected Node{selectedNodeIds.length > 1 ? "s" : ""}
-          </button>
+          <button onClick={deleteSelectedNodes} disabled={!selectedNodeIds.length} className="mt-auto bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 transition disabled:opacity-50">🗑 Delete Selected Node{selectedNodeIds.length > 1 ? "s" : ""}</button>
         </aside>
-
-        {/* Canvas Area */}
         <div className="flex-1 relative">
           <ReactFlow
             nodes={nodes}
@@ -1598,23 +1517,9 @@ export default function AutomationFlow() {
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             nodeTypes={nodeTypes}
-            onSelectionChange={({ nodes: selNodes }) => {
-              setSelectedNodeIds(selNodes.map((n) => n.id));
-            }}
+            onSelectionChange={({ nodes: selNodes }) => setSelectedNodeIds(selNodes.map((n) => n.id))}
             fitView
           >
-            <MiniMap
-              nodeColor={(node) => {
-                if (node.type === "trigger") return "#34D399";
-                if (node.type === "selector") return "#9CA3AF";
-                if (node.type === "facebook") return "#0084FF";
-                if (node.type === "instagram") return "#E4405F";
-                if (node.type === "telegram") return "#37AEE2";
-                if (node.type === "sms") return "#34D399";
-                if (node.type === "email") return "#8B5CF6";
-                return "#6366F1"; // AI and others
-              }}
-            />
             <Controls />
             <Background variant="dots" gap={24} size={1} color="#d1d5db" />
           </ReactFlow>
@@ -1623,3 +1528,4 @@ export default function AutomationFlow() {
     </div>
   );
 }
+

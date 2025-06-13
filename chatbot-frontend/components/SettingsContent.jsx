@@ -11,6 +11,7 @@ import {
 import { MdSms } from 'react-icons/md'
 import { HiOutlineMail } from 'react-icons/hi'
 
+
 /**
  * This upgraded SettingsContent.jsx now:
  * 1. Splits each “section” into its own subcomponent for clarity.
@@ -48,6 +49,7 @@ const channelItems = [
   { icon: <HiOutlineMail />, label: 'Email' },
   { icon: <FaTelegramPlane />, label: 'Telegram' },
 ]
+
 
 export default function SettingsContent() {
   const [active, setActive] = useState('general')
