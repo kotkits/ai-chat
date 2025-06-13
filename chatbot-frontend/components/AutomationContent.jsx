@@ -540,7 +540,7 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }
       <div className="absolute right-[-6px] top-1/2 transform -translate-y-1/2">
         <Handle
           type="source"
-          position="right"
+          position="bottom"
           id="out"
           style={{
             background: "#FFFFFF",
@@ -742,7 +742,7 @@ const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data
       <div className="absolute right-[-6px] top-1/2 transform -translate-y-1/2">
         <Handle
           type="source"
-          position="right"
+          position="bottom"
           id="out"
           style={{
             background: "#FFFFFF",
@@ -938,7 +938,7 @@ const TelegramMessageNode = React.memo(function TelegramMessageNode({ id, data }
       <div className="absolute right-[-6px] top-1/2 transform -translate-y-1/2">
         <Handle
           type="source"
-          position="right"
+          position="bottom"
           id="out"
           style={{
             background: "#FFFFFF",
