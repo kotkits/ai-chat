@@ -32,7 +32,7 @@ const BottomHandle = ({ color = "#9CA3AF" }) => (
 // area, and a right‐side outgoing handle labeled “Next Step →”.
 //
 const TriggerNode = React.memo(
-  function TriggerNode({ id, data }) {
+  function TriggerNode({ id, data, selected }) {
     const nodeRef = useRef(null);
 
     // Resize tracking
@@ -43,16 +43,16 @@ const TriggerNode = React.memo(
     const startHRef = useRef(data.height);
 
     // Begin resize
-    const onResizeMouseDown = (e) => {
-      e.stopPropagation();
-      isResizingRef.current = true;
-      startXRef.current = e.clientX;
-      startYRef.current = e.clientY;
-      startWRef.current = data.width;
-      startHRef.current = data.height;
-      window.addEventListener("mousemove", onMouseMove);
-      window.addEventListener("mouseup", onMouseUp);
-    };
+    // const onResizeMouseDown = (e) => {
+    //   e.stopPropagation();
+    //   isResizingRef.current = true;
+    //   startXRef.current = e.clientX;
+    //   startYRef.current = e.clientY;
+    //   startWRef.current = data.width;
+    //   startHRef.current = data.height;
+    //   window.addEventListener("mousemove", onMouseMove);
+    //   window.addEventListener("mouseup", onMouseUp);
+    // };
 
     // During resize
     const onMouseMove = (e) => {
@@ -125,7 +125,7 @@ const TriggerNode = React.memo(
             onClick={() => data.onAddTrigger && data.onAddTrigger(id)}
             className="
               w-full h-10
-              border-2 border-dashed border-blue-400
+              border-1 border-dashed border-blue-400
               rounded-lg
               flex items-center justify-center
               text-blue-600 font-semibold text-sm
@@ -166,11 +166,19 @@ const TriggerNode = React.memo(
 // A dashed‐border panel listing all possible “first steps.” Clicking one calls data.onSelect(label).
 // Has a top (incoming) handle and a right (outgoing) handle.
 //
-const SelectorNode = React.memo(function SelectorNode({ id, data }) {
+const SelectorNode = React.memo(function SelectorNode({ id, data, selected }) {
   const nodeRef = useRef(null);
 
   const handlePick = (label) => {
     data.onSelect(label);
+  };
+
+      const handleDelete = () => {
+    if (typeof data.onDelete === "function") {
+      data.onDelete(id); // call the delete function from the main component
+    } else {
+      console.warn("onDelete is not defined for this node.");
+    }
   };
 
   return (
@@ -191,6 +199,20 @@ const SelectorNode = React.memo(function SelectorNode({ id, data }) {
         overflow-auto
       "
     >
+      {selected && (
+  <button
+    onClick={() => handleDelete()}
+    className="absolute -top-3 right-3 bg-white p-1 rounded-full shadow hover:bg-red-50 transition"
+    title="Delete this node"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22" />
+    </svg>
+  </button>
+)}
+
+      
       {/* Top handle (incoming) */}
       <Handle
         type="target"
@@ -365,7 +387,7 @@ const SelectorNode = React.memo(function SelectorNode({ id, data }) {
 // A blue‐bordered “Send Message” for Messenger, with brand‐colored icon,
 // dashed “Add a text” area, and a bare circle handle on the right.
 //
-const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }) {
+const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data, selected }) {
   const [isEditing, setIsEditing] = useState(false);
   const textareaRef = useRef(null);
   const nodeRef = useRef(null);
@@ -377,16 +399,16 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }
   const startWRef = useRef(data.width);
   const startHRef = useRef(data.height);
 
-  const onResizeMouseDown = (e) => {
-    e.stopPropagation();
-    isResizingRef.current = true;
-    startXRef.current = e.clientX;
-    startYRef.current = e.clientY;
-    startWRef.current = data.width;
-    startHRef.current = data.height;
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-  };
+  // const onResizeMouseDown = (e) => {
+  //   e.stopPropagation();
+  //   isResizingRef.current = true;
+  //   startXRef.current = e.clientX;
+  //   startYRef.current = e.clientY;
+  //   startWRef.current = data.width;
+  //   startHRef.current = data.height;
+  //   window.addEventListener("mousemove", onMouseMove);
+  //   window.addEventListener("mouseup", onMouseUp);
+  // };
 
   const onMouseMove = (e) => {
     if (!isResizingRef.current) return;
@@ -429,6 +451,14 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }
     }
   };
 
+    const handleDelete = () => {
+    if (typeof data.onDelete === "function") {
+      data.onDelete(id); // call the delete function from the main component
+    } else {
+      console.warn("onDelete is not defined for this node.");
+    }
+  };
+
   return (
     <div
       ref={nodeRef}
@@ -449,6 +479,19 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }
         cursor-default
       "
     >
+      {selected && (
+  <button
+    onClick={() => handleDelete(id)}
+    className="absolute -top-3 right-3 bg-white p-1 rounded-full shadow hover:bg-red-50 transition"
+    title="Delete this node"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22" />
+    </svg>
+  </button>
+)}
+
       {/* Top incoming handle */}
       <Handle
         type="target"
@@ -564,7 +607,7 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data }
 // A pink‐bordered “Send Message” for Instagram, with gradient icon,
 // dashed “Add a text” area, and a bare circle handle on the right.
 //
-const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data }) {
+const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data, selected }) {
   const [isEditing, setIsEditing] = useState(false);
   const textareaRef = useRef(null);
   const nodeRef = useRef(null);
@@ -628,6 +671,14 @@ const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data
     }
   };
 
+    const handleDelete = () => {
+    if (typeof data.onDelete === "function") {
+      data.onDelete(id); // call the delete function from the main component
+    } else {
+      console.warn("onDelete is not defined for this node.");
+    }
+  };
+
   return (
     <div
       ref={nodeRef}
@@ -648,6 +699,19 @@ const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data
         cursor-default
       "
     >
+      {selected && (
+  <button
+    onClick={() => handleDelete(id)}
+    className="absolute -top-3 right-3 bg-white p-1 rounded-full shadow hover:bg-red-50 transition"
+    title="Delete this node"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22" />
+    </svg>
+  </button>
+)}
+
       {/* Top incoming handle */}
       <Handle
         type="target"
@@ -877,6 +941,17 @@ export default function AutomationFlow() {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNodeIds, setSelectedNodeIds] = useState([]);
 
+
+  // ────── DELETE A SINGLE NODE ───────────────────────────────────────────────
+ const deleteNode = useCallback((nodeId) => {
+   // remove the node
+  setNodes((nds) => nds.filter((n) => n.id !== nodeId));
+   // remove any edges connected to it
+  setEdges((eds) =>
+    eds.filter((e) => e.source !== nodeId && e.target !== nodeId)
+   );
+ }, [setNodes, setEdges]);
+
   const handleLabelChange = useCallback((id, value) => {
     setNodes((nds) =>
       nds.map((n) =>
@@ -898,6 +973,7 @@ export default function AutomationFlow() {
                 width: newW,
                 height: newH,
                 onResize: handleResize,
+                 onDelete: deleteNode,
                 onAddTrigger: n.type === "trigger" ? spawnSelector : n.data.onAddTrigger,
               },
             }
@@ -953,24 +1029,24 @@ export default function AutomationFlow() {
     });
   }, [setNodes, handleResize, handleLabelChange]);
 
-  const deleteSelectedNodes = () => {
-    if (!selectedNodeIds.length) return;
-    setNodes((nds) => nds.filter((n) => !selectedNodeIds.includes(n.id)));
-    setEdges((eds) => eds.filter((e) => !selectedNodeIds.includes(e.source) && !selectedNodeIds.includes(e.target)));
-    setSelectedNodeIds([]);
-  };
+  // const deleteSelectedNodes = () => {
+  //   if (!selectedNodeIds.length) return;
+  //   setNodes((nds) => nds.filter((n) => !selectedNodeIds.includes(n.id)));
+  //   setEdges((eds) => eds.filter((e) => !selectedNodeIds.includes(e.source) && !selectedNodeIds.includes(e.target)));
+  //   setSelectedNodeIds([]);
+  // };
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       <div className="flex flex-1 overflow-hidden">
         <aside className="w-1/4 p-6 bg-white dark:bg-gray-800 border-r dark:border-gray-700 flex flex-col space-y-6 overflow-y-auto">
           <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">✨ Automation Builder</h2>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">Click “+ New Trigger” below to add your first trigger.</p>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">Click “New Trigger” below to add your first trigger.</p>
           <div className="space-y-2">
             <div className="font-medium text-gray-700 dark:text-gray-300">When…</div>
-            <button onClick={() => { const newId = getId(); setNodes((nds) => [...nds, { id: newId, type: "trigger", data: { width: 300, height: 160, onResize: handleResize, onAddTrigger: spawnSelector }, position: { x: 200, y: 20 + nds.length * 200 } }]); }} className="w-full text-center px-3 py-2 border-2 border-dashed border-green-400 rounded-lg text-green-600 font-semibold hover:bg-green-50 dark:hover:bg-gray-700 transition">+ New Trigger</button>
+            <button onClick={() => { const newId = getId(); setNodes((nds) => [...nds, { id: newId, type: "trigger", data: { width: 300, height: 160, onResize: handleResize, onAddTrigger: spawnSelector }, position: { x: 200, y: 20 + nds.length * 200 } }]); }} className="w-full text-center px-3 py-2 border-2 border-dashed border-green-400 rounded-lg text-green-600 font-semibold hover:bg-green-50 dark:hover:bg-gray-700 transition">+New Trigger</button>
           </div>
-          <button onClick={deleteSelectedNodes} disabled={!selectedNodeIds.length} className="mt-auto bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 transition disabled:opacity-50">🗑 Delete Selected Node{selectedNodeIds.length > 1 ? "s" : ""}</button>
+          {/* <button onClick={deleteSelectedNodes} disabled={!selectedNodeIds.length} className="mt-auto bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 transition disabled:opacity-50">🗑 Delete Selected Node{selectedNodeIds.length > 1 ? "s" : ""}</button> */}
         </aside>
         <div className="flex-1 relative">
           <ReactFlow
@@ -980,8 +1056,10 @@ export default function AutomationFlow() {
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             nodeTypes={nodeTypes}
-            onSelectionChange={({ nodes: selNodes }) => setSelectedNodeIds(selNodes.map((n) => n.id))}
-            fitView
+               onSelectionChange={(elements) => {
+        const selected = elements?.nodes?.map((n) => n.id) || [];
+        setSelectedNodeIds(selected);
+      }}
           >
             <Controls />
             <Background variant="dots" gap={24} size={1} color="#d1d5db" />
