@@ -71,6 +71,7 @@ const TriggerNode = React.memo(
       window.removeEventListener("mouseup", onMouseUp);
     };
 
+
     return (
       <div
         ref={nodeRef}
@@ -90,6 +91,28 @@ const TriggerNode = React.memo(
           overflow-hidden
         "
       >
+
+         {selected && (
+  <button
+    onClick={() => data.onDelete(id)}
+    className="absolute -top-1% right-3 bg-white p-1 rounded-full shadow hover:bg-red-50 transition"
+    title="Delete this node"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg"
+         className="h-4 w-4 text-red-600"
+         fill="none"
+         viewBox="0 0 24 24"
+         stroke="currentColor"
+    >
+      <path strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+      />
+    </svg>
+  </button>
+)}
+
         {/* Top handle (incoming) */}
         <Handle
           type="target"
@@ -173,13 +196,8 @@ const SelectorNode = React.memo(function SelectorNode({ id, data, selected }) {
     data.onSelect(label);
   };
 
-      const handleDelete = () => {
-    if (typeof data.onDelete === "function") {
-      data.onDelete(id); // call the delete function from the main component
-    } else {
-      console.warn("onDelete is not defined for this node.");
-    }
-  };
+
+
 
   return (
     <div
@@ -199,18 +217,27 @@ const SelectorNode = React.memo(function SelectorNode({ id, data, selected }) {
         overflow-auto
       "
     >
-      {selected && (
+ {selected && (
   <button
-    onClick={() => handleDelete()}
-    className="absolute -top-3 right-3 bg-white p-1 rounded-full shadow hover:bg-red-50 transition"
+    onClick={() => data.onDelete(id)}
+    className="absolute -top-1% right-3 bg-white p-1 rounded-full shadow hover:bg-red-50 transition"
     title="Delete this node"
   >
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22" />
+    <svg xmlns="http://www.w3.org/2000/svg"
+         className="h-4 w-4 text-red-600"
+         fill="none"
+         viewBox="0 0 24 24"
+         stroke="currentColor"
+    >
+      <path strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+      />
     </svg>
   </button>
 )}
+
 
       
       {/* Top handle (incoming) */}
@@ -338,46 +365,15 @@ const SelectorNode = React.memo(function SelectorNode({ id, data, selected }) {
         </button>
       </div>
 
-      {/* Logic Category */}
-      <div>
-        <div className="text-xs text-gray-600 dark:text-gray-400 uppercase font-medium">
-          Logic
-        </div>
-        {[
-          { label: "Actions", color: "#F59E0B", icon: "⚡" },
-          { label: "Condition", color: "#06B6D4", icon: "⏱" },
-          { label: "Randomizer", color: "#A78BFA", icon: "🔀" },
-          { label: "Smart Delay", color: "#EF4444", icon: "⏳" },
-        ].map(({ label, color, icon }) => (
-          <button
-            key={label}
-            onClick={() => handlePick(label)}
-            className="
-              w-full flex items-center space-x-2 px-3 py-2 mt-1
-              bg-white dark:bg-gray-700
-              border border-gray-300 dark:border-gray-600
-              rounded-md hover:bg-gray-100 dark:hover:bg-gray-600
-              transition
-            "
-          >
-            <span
-              className="h-5 w-5 flex items-center justify-center rounded-full text-white text-xs"
-              style={{ backgroundColor: color }}
-            >
-              {icon}
-            </span>
-            <span className="text-sm text-gray-800 dark:text-gray-200">{label}</span>
-          </button>
-        ))}
-      </div>
 
-      {/* The right‐side outgoing handle for chaining */}
+
+      {/* The right‐side outgoing handle for chaining
       <Handle
         type="source"
         position="right"
         id="out"
         style={{ background: "#9CA3AF", width: 10, height: 10 }}
-      />
+      /> */}
     </div>
   );
 });
@@ -451,13 +447,8 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data, 
     }
   };
 
-    const handleDelete = () => {
-    if (typeof data.onDelete === "function") {
-      data.onDelete(id); // call the delete function from the main component
-    } else {
-      console.warn("onDelete is not defined for this node.");
-    }
-  };
+
+
 
   return (
     <div
@@ -479,18 +470,27 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data, 
         cursor-default
       "
     >
-      {selected && (
+{selected && (
   <button
-    onClick={() => handleDelete(id)}
-    className="absolute -top-3 right-3 bg-white p-1 rounded-full shadow hover:bg-red-50 transition"
+    onClick={() => data.onDelete(id)}
+    className="absolute -top-1% right-3 bg-white p-1 rounded-full shadow hover:bg-red-50 transition"
     title="Delete this node"
   >
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22" />
+    <svg xmlns="http://www.w3.org/2000/svg"
+         className="h-4 w-4 text-red-600"
+         fill="none"
+         viewBox="0 0 24 24"
+         stroke="currentColor"
+    >
+      <path strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+      />
     </svg>
   </button>
 )}
+
 
       {/* Top incoming handle */}
       <Handle
@@ -671,13 +671,7 @@ const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data
     }
   };
 
-    const handleDelete = () => {
-    if (typeof data.onDelete === "function") {
-      data.onDelete(id); // call the delete function from the main component
-    } else {
-      console.warn("onDelete is not defined for this node.");
-    }
-  };
+
 
   return (
     <div
@@ -699,18 +693,27 @@ const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data
         cursor-default
       "
     >
-      {selected && (
+ {selected && (
   <button
-    onClick={() => handleDelete(id)}
-    className="absolute -top-3 right-3 bg-white p-1 rounded-full shadow hover:bg-red-50 transition"
+    onClick={() => data.onDelete(id)}
+    className="absolute -top-1% right-3 bg-white p-1 rounded-full shadow hover:bg-red-50 transition"
     title="Delete this node"
   >
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22" />
+    <svg xmlns="http://www.w3.org/2000/svg"
+         className="h-4 w-4 text-red-600"
+         fill="none"
+         viewBox="0 0 24 24"
+         stroke="currentColor"
+    >
+      <path strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+      />
     </svg>
   </button>
 )}
+
 
       {/* Top incoming handle */}
       <Handle
@@ -861,16 +864,11 @@ const AIModuleNode = React.memo(function AIModuleNode({ id, data }) {
     <div
       onClick={(e) => {
         e.stopPropagation();
-        setIsEditing(true);
+        data.onOpenAI(id);
       }}
       className="
-        relative
-        bg-white dark:bg-gray-800
-        border border-gray-300 dark:border-gray-600
-        rounded-lg
-        shadow-sm p-3
-        hover:shadow-md transition
-        cursor-text
+     relative bg-white p-4 rounded shadow 
+        cursor-pointer
       "
       style={{ minWidth: 200, minHeight: 80 }}
     >
@@ -940,6 +938,31 @@ export default function AutomationFlow() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNodeIds, setSelectedNodeIds] = useState([]);
+  const [aiGoal, setAiGoal] = useState("");
+  const [aiContext, setAiContext] = useState("");
+  
+
+
+  const [openAIConfig, setOpenAIConfig] = useState(null);
+// openAIConfig will hold the node id or null
+
+const handleOpenAIConfig = useCallback((nodeId) => {
+  setAiGoal("");
+  setAiContext("");
+  setOpenAIConfig(nodeId);
+}, []);
+
+const handleSubmitAI = useCallback(() => {
+  if (!openAIConfig) return;
+  setNodes((nds) =>
+    nds.map((n) =>
+      n.id === openAIConfig
+        ? { ...n, data: { ...n.data, label: aiGoal } }
+        : n
+    )
+  );
+  setOpenAIConfig(null);
+}, [openAIConfig, aiGoal, setNodes]);
 
 
   // ────── DELETE A SINGLE NODE ───────────────────────────────────────────────
@@ -973,7 +996,7 @@ export default function AutomationFlow() {
                 width: newW,
                 height: newH,
                 onResize: handleResize,
-                 onDelete: deleteNode,
+                onDelete: deleteNode,
                 onAddTrigger: n.type === "trigger" ? spawnSelector : n.data.onAddTrigger,
               },
             }
@@ -994,7 +1017,7 @@ export default function AutomationFlow() {
       const newSelector = {
         id: newSelectorId,
         type: "selector",
-        data: { width: 200, height: 300, onSelect: (choiceLabel) => spawnBranchNode(choiceLabel, newSelectorId) },
+        data: { width: 200, height: 300, onSelect: (choiceLabel) => spawnBranchNode(choiceLabel, newSelectorId),onDelete: deleteNode, },
         position: { x: triggerNode.position.x + triggerNode.data.width + 50, y: triggerNode.position.y },
       };
       setEdges((prev) =>
@@ -1014,15 +1037,13 @@ export default function AutomationFlow() {
       switch (label) {
         case "Messenger": nodeType = "facebook"; break;
         case "Instagram": nodeType = "instagram"; break;
-        case "Telegram": nodeType = "telegram"; break;
-        case "SMS": nodeType = "sms"; break;
-        case "Email": nodeType = "email"; break;
+
         default: nodeType = "ai"; break;
       }
       const newNode = {
         id: newId,
         type: nodeType,
-        data: { width, height, label: "", onResize: handleResize, onChange: handleLabelChange },
+        data: { width, height, label: "", onOpenAI: handleOpenAIConfig, onResize: handleResize, onChange: handleLabelChange,  onDelete: deleteNode, },
         position: { x: selector ? selector.position.x + selector.data.width + 50 : 600, y: selector ? selector.position.y : 100 },
       };
       return [...nds, newNode];
@@ -1044,9 +1065,9 @@ export default function AutomationFlow() {
           <p className="text-gray-600 dark:text-gray-400 text-sm">Click “New Trigger” below to add your first trigger.</p>
           <div className="space-y-2">
             <div className="font-medium text-gray-700 dark:text-gray-300">When…</div>
-            <button onClick={() => { const newId = getId(); setNodes((nds) => [...nds, { id: newId, type: "trigger", data: { width: 300, height: 160, onResize: handleResize, onAddTrigger: spawnSelector }, position: { x: 200, y: 20 + nds.length * 200 } }]); }} className="w-full text-center px-3 py-2 border-2 border-dashed border-green-400 rounded-lg text-green-600 font-semibold hover:bg-green-50 dark:hover:bg-gray-700 transition">+New Trigger</button>
+            <button onClick={() => { const newId = getId(); setNodes((nds) => [...nds, { id: newId, type: "trigger", data: { width: 300, height: 160, onOpenAI: handleOpenAIConfig, onResize: handleResize, onAddTrigger: spawnSelector, onDelete: deleteNode,  }, position: { x: 200, y: 20 + nds.length * 200 } }]); }} className="w-full text-center px-3 py-2 border-2 border-dashed border-green-400 rounded-lg text-green-600 font-semibold hover:bg-green-50 dark:hover:bg-gray-700 transition">+New Trigger</button>
           </div>
-          {/* <button onClick={deleteSelectedNodes} disabled={!selectedNodeIds.length} className="mt-auto bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 transition disabled:opacity-50">🗑 Delete Selected Node{selectedNodeIds.length > 1 ? "s" : ""}</button> */}
+          
         </aside>
         <div className="flex-1 relative">
           <ReactFlow
@@ -1064,6 +1085,43 @@ export default function AutomationFlow() {
             <Controls />
             <Background variant="dots" gap={24} size={1} color="#d1d5db" />
           </ReactFlow>
+
+   {openAIConfig && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96">
+      <h3 className="text-lg font-semibold mb-4">Tell AI what to do</h3>
+      <textarea
+        className="w-full p-2 border rounded mb-4"
+        placeholder="Set a goal for the conversation"
+        value={aiGoal}
+        onChange={e => setAiGoal(e.target.value)}
+      />
+      <h3 className="text-lg font-semibold mb-2">Give AI context</h3>
+      <textarea
+        className="w-full p-2 border rounded mb-4"
+        placeholder="Share all the info"
+        value={aiContext}
+        onChange={e => setAiContext(e.target.value)}
+      />
+      <div className="flex justify-end space-x-2">
+        <button
+          className="px-4 py-2 bg-black text-white rounded"
+          onClick={() => setOpenAIConfig(null)}
+        >
+          Cancel
+        </button>
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+          onClick={handleSubmitAI}
+        >
+          ✨ Generate
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
         </div>
       </div>
     </div>
