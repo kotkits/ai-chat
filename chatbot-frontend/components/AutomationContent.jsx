@@ -17,6 +17,8 @@ import ReactFlow, {
 } from "reactflow";
 import "reactflow/dist/style.css";
 
+
+
 const TopHandle = ({ color = "#9CA3AF" }) => (
   <Handle type="target" position="top" id="in" style={{ background: color, width: 10, height: 10 }} />
 );
@@ -27,162 +29,54 @@ const BottomHandle = ({ color = "#9CA3AF" }) => (
 
 
 //
-// ─── TriggerNode ────────────────────────────────────────────────────────────
-// A green‐bordered box with header “⚡ When…”, description text, a dashed “+ New Trigger”
-// area, and a right‐side outgoing handle labeled “Next Step →”.
-//
-const TriggerNode = React.memo(
-  function TriggerNode({ id, data, selected }) {
-    const nodeRef = useRef(null);
-
-    // Resize tracking
-    const isResizingRef = useRef(false);
-    const startXRef = useRef(0);
-    const startYRef = useRef(0);
-    const startWRef = useRef(data.width);
-    const startHRef = useRef(data.height);
-
-    // Begin resize
-    // const onResizeMouseDown = (e) => {
-    //   e.stopPropagation();
-    //   isResizingRef.current = true;
-    //   startXRef.current = e.clientX;
-    //   startYRef.current = e.clientY;
-    //   startWRef.current = data.width;
-    //   startHRef.current = data.height;
-    //   window.addEventListener("mousemove", onMouseMove);
-    //   window.addEventListener("mouseup", onMouseUp);
-    // };
-
-    // During resize
-    const onMouseMove = (e) => {
-      if (!isResizingRef.current) return;
-      const dx = e.clientX - startXRef.current;
-      const dy = e.clientY - startYRef.current;
-      const newW = Math.max(200, startWRef.current + dx);
-      const newH = Math.max(120, startHRef.current + dy);
-      data.onResize(id, newW, newH);
-    };
-
-    // End resize
-    const onMouseUp = () => {
-      isResizingRef.current = false;
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    };
-
-
-    return (
-      <div
-        ref={nodeRef}
-        style={{
-          width: data.width,
-          minHeight: data.height,
-          boxSizing: "border-box",
-        }}
-        className="
-          relative
-          bg-white dark:bg-gray-800
-          border-2 border-green-400
-          rounded-lg
-          shadow-md
-          p-4
-          flex flex-col
-          overflow-hidden
-        "
-      >
-
-         {selected && (
-  <button
-    onClick={() => data.onDelete(id)}
-    className="absolute -top-1% right-3 bg-white p-1 rounded-full shadow hover:bg-red-50 transition"
-    title="Delete this node"
-  >
-    <svg xmlns="http://www.w3.org/2000/svg"
-         className="h-4 w-4 text-red-600"
-         fill="none"
-         viewBox="0 0 24 24"
-         stroke="currentColor"
+// Trigger Node
+const TriggerNode = React.memo(({ id, data, selected }) => {
+  const nodeRef = useRef(null);
+  return (
+    <div
+      ref={nodeRef}
+      style={{ width: data.width, minHeight: data.height }}
+      className="relative bg-white dark:bg-gray-800 border-2 border-green-400 rounded-lg shadow-md p-4 flex flex-col"
     >
-      <path strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-      />
-    </svg>
-  </button>
-)}
-
-        {/* Top handle (incoming) */}
+      {selected && (
+        <button
+          onClick={() => data.onDelete(id)}
+          className="absolute -top-1% right-3 bg-white p-1 rounded-full shadow hover:bg-red-50 transition"
+          title="Delete this node"
+        >
+          {/* Trashcan icon */}
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m2 0a2 2 0 01-2 2H9a2 2 0 01-2-2m5-6v6m0 0V7m0 6V7m-1-3h4m-6 0h6m-6 0v-1a2 2 0 012-2h2a2 2 0 012 2v1" />
+          </svg>
+        </button>
+      )}
+      <div className="flex items-center mb-2">
+        <span className="text-2xl text-green-500 mr-2">⚡</span>
+        <span className="text-lg font-semibold text-gray-800 dark:text-gray-200">When…</span>
+      </div>
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        A Trigger is an event that starts your Automation. Click to add a Trigger.
+      </p>
+      <div className="flex-1">
+        <button
+          onClick={() => data.onAddTrigger(id)}
+          className="w-full h-10 border border-dashed border-blue-400 rounded-lg text-blue-600 font-semibold hover:bg-blue-50 dark:hover:bg-gray-700 transition"
+        >
+          + New Trigger
+        </button>
+      </div>
+      <div className="absolute bottom-1 right-2 flex items-center space-x-1">
+        <span className="text-xs text-gray-700 dark:text-gray-300">Then</span>
         <Handle
-          type="target"
-          position="top"
-          id="in"
-          style={{ background: "#34D399", width: 10, height: 10 }}
-        />
-
-        {/* Bottom handle (outgoing) */}
-      <Handle
-        type="source"
-        position="bottom"
-        id="out"
-        style={{ background: "#34D399", width: 10, height: 10 }}
-      />
-
-        {/* Header row: ⚡ When… */}
-        <div className="flex items-center mb-2">
-          <span className="text-2xl text-green-500 mr-2">⚡</span>
-          <span className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-            When…
-          </span>
-        </div>
-
-        {/* Description text */}
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 leading-snug">
-          A Trigger is an event that starts your Automation. Click to add a Trigger.
-        </p>
-
-        {/* Dashed “+ New Trigger” box */}
-        <div className="flex-1">
-          <button
-            onClick={() => data.onAddTrigger && data.onAddTrigger(id)}
-            className="
-              w-full h-10
-              border-1 border-dashed border-blue-400
-              rounded-lg
-              flex items-center justify-center
-              text-blue-600 font-semibold text-sm
-              hover:bg-blue-50 dark:hover:bg-gray-700
-              transition
-            "
-          >
-            + New Trigger
-          </button>
-        </div>
-
-       {/* Bottom-right “Next Step →” handle */}
-<div className="absolute bottom-[-1px] right-2 flex items-center space-x-1">
-  <Handle
-    type="source"
-    position="bottom"
-    id="out"
-  />
-  <span className="text-xs text-gray-700 dark:text-gray-300">Then →</span>
-</div>
-
-
-        {/* Resize handle (tiny green square) */}
-        <div
-          // onMouseDown={onResizeMouseDown}
-          // className="absolute bottom-2 right-2 w-3 h-3 bg-green-400 cursor-se-resize rounded-sm"
-          // title="Drag to resize"
+          type="source"
+          position="bottom"
+          id="out"
+          style={{ position: "static", transform: "none", marginLeft: 4, background: "#34D399", width: 10, height: 10 }}
         />
       </div>
-    );
-  },
-  // (prev, next) =>
-  //   prev.data.width === next.data.width && prev.data.height === next.data.height
-);
+    </div>
+  );
+});
 
 //
 // ─── SelectorNode ──────────────────────────────────────────────────────────
@@ -260,7 +154,6 @@ const SelectorNode = React.memo(function SelectorNode({ id, data, selected }) {
         </div>
         {[
           { label: "Messenger", color: "#0084FF" },
-          { label: "Instagram", color: "#E4405F" },
         ].map(({ label, color }) => (
           <button
             key={label}
@@ -344,36 +237,41 @@ const SelectorNode = React.memo(function SelectorNode({ id, data, selected }) {
       </div>
 
       {/* AI Category */}
-      <div className="mb-4">
+     <div className="mb-4">
         <div className="text-xs text-gray-600 dark:text-gray-400 uppercase font-medium">
-          AI
+          AI Steps
         </div>
-        <button
-          onClick={() => handlePick("AI Step")}
-          className="
-            w-full flex items-center space-x-2 px-3 py-2 mt-1
-            bg-white dark:bg-gray-700
-            border border-gray-300 dark:border-gray-600
-            rounded-md hover:bg-gray-100 dark:hover:bg-gray-600
-            transition
-          "
-        >
-          <span className="h-5 w-5 flex items-center justify-center rounded-full bg-[#6366F1] text-white text-xs">
-            🤖
-          </span>
-          <span className="text-sm text-gray-800 dark:text-gray-200">AI Step</span>
-        </button>
-      </div>
+       {[
+    { label: "ChatGPT", icon: "🤖", bg: "#6366F1" },
+    { label: "Cloude AI", icon: "☁️", bg: "#10B981" },
+  ].map(({ label, icon, bg }) => (
+    <button
+      key={label}
+      onClick={() => data.onSelectAI(label, id)}
+      className="
+        w-full flex items-center space-x-2 px-3 py-2 mt-1
+        bg-white dark:bg-gray-700
+        border border-gray-300 dark:border-gray-600
+        rounded-md hover:bg-gray-100 dark:hover:bg-gray-600
+        transition
+      "
+    >
+      <span
+        className="h-5 w-5 flex items-center justify-center rounded-full text-white text-xs"
+        style={{ background: bg }}
+      >
+        {icon}
+      </span>
+      <span className="text-sm text-gray-800 dark:text-gray-200">
+        {label}
+      </span>
+    </button>
+  ))}
+</div>
 
 
 
-      {/* The right‐side outgoing handle for chaining
-      <Handle
-        type="source"
-        position="right"
-        id="out"
-        style={{ background: "#9CA3AF", width: 10, height: 10 }}
-      /> */}
+
     </div>
   );
 });
@@ -476,18 +374,18 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data, 
     className="absolute -top-1% right-3 bg-white p-1 rounded-full shadow hover:bg-red-50 transition"
     title="Delete this node"
   >
-    <svg xmlns="http://www.w3.org/2000/svg"
-         className="h-4 w-4 text-red-600"
-         fill="none"
-         viewBox="0 0 24 24"
-         stroke="currentColor"
-    >
-      <path strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-      />
-    </svg>
+  <svg xmlns="http://www.w3.org/2000/svg"
+       className="h-4 w-4 text-red-600"
+       fill="none"
+       viewBox="0 0 24 24"
+       stroke="currentColor"
+  >
+    <path strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3m-4 0h14"
+    />
+  </svg>
   </button>
 )}
 
@@ -500,24 +398,35 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data, 
         style={{ background: "#0084FF", width: 10, height: 10 }}
       />
 
-      {/* Bottom handle (outgoing) */}
+      {/* Bottom handle (outgoing)
       <Handle
         type="source"
         position="bottom"
         id="out"
         style={{ background: "#34D399", width: 10, height: 10 }}
-      />
+      /> */}
 
       
-       {/* Bottom-right “Next Step →” handle */}
-        <div className="absolute bottom-[-1px] right-2 flex items-center space-x-1">
-          <Handle
-            type="source"
-            position="bottom"
-            id="out"
-          />
-          <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
-        </div>
+    {/* Inline “Next Step →” label + handle */}
+<div className="absolute bottom-2 right-2 flex items-center space-x-1">
+  <span className="text-xs text-gray-700 dark:text-gray-300">
+    Next Step 
+  </span>
+  <Handle
+    type="source"
+    position="bottom"
+    id="out"
+    // override React Flow’s absolute positioning
+    style={{
+      position: "static",
+      transform: "none",
+      marginLeft: 4,
+      background: "#34D399",
+      width: 10,
+      height: 10,
+    }}
+  />
+</div>
 
 
       {/* Header row: circular Messenger icon + “Send Message” */}
@@ -602,15 +511,18 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data, 
   );
 });
 
+
 //
-// ─── InstagramMessageNode ───────────────────────────────────────────────────
-// A pink‐bordered “Send Message” for Instagram, with gradient icon,
-// dashed “Add a text” area, and a bare circle handle on the right.
+// ─── AIModuleNode ───────────────────────────────────────────────────────────
+// A generic “AI” block; click to add/edit text. It already has top and right handles.
 //
-const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data, selected }) {
+const AIModuleNode = React.memo(function AIModuleNode({ id, data, selected }) {
   const [isEditing, setIsEditing] = useState(false);
   const textareaRef = useRef(null);
   const nodeRef = useRef(null);
+
+  const [aiGoal, setAiGoal]     = useState(data.aiGoal   || '');
+const [aiContext, setAiContext] = useState(data.aiContext || '');
 
   // Resize tracking
   const isResizingRef = useRef(false);
@@ -645,6 +557,14 @@ const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data
     window.removeEventListener("mouseup", onMouseUp);
   };
 
+  // Sync local state back to the node data when it changes
+  useEffect(() => {
+    if (data.onChange) {
+      data.onChange({ aiGoal, aiContext });
+    }
+  }, [aiGoal, aiContext]);
+
+  // Auto-resize textarea on edit
   useEffect(() => {
     if (isEditing && textareaRef.current) {
       textareaRef.current.focus();
@@ -660,9 +580,7 @@ const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data
     }
   }, [data.label, isEditing]);
 
-  const handleContentChange = (e) => {
-    data.onChange(id, e.target.value);
-  };
+  const handleContentChange = (e) => data.onChange(id, e.target.value);
   const handleBlur = () => setIsEditing(false);
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
@@ -671,252 +589,109 @@ const InstagramMessageNode = React.memo(function InstagramMessageNode({ id, data
     }
   };
 
-
+  // Determine dynamic styling
+  const color = data.provider === 'chatgpt' ? '#6366F1' : '#10B981';
+  const iconSvg = data.provider === 'chatgpt'
+    ? (<span className="h-6 w-6 flex items-center justify-center rounded-full bg-[#6366F1] text-white text-xs">🤖</span>)
+    : (<span className="h-6 w-6 flex items-center justify-center rounded-full bg-[#10B981] text-white text-xs">☁️</span>);
+  const title = data.provider === 'chatgpt' ? 'ChatGPT' : 'Cloude AI';
 
   return (
-    <div
-      ref={nodeRef}
-      style={{
-        width: data.width,
-        minHeight: data.height,
-        boxSizing: "border-box",
-      }}
-      className="
-        relative
-        bg-white dark:bg-gray-800
-        border-2 border-pink-500
-        rounded-lg
-        shadow-md
-        p-4
-        flex flex-col
-        overflow-hidden
-        cursor-default
-      "
-    >
- {selected && (
-  <button
-    onClick={() => data.onDelete(id)}
-    className="absolute -top-1% right-3 bg-white p-1 rounded-full shadow hover:bg-red-50 transition"
-    title="Delete this node"
-  >
-    <svg xmlns="http://www.w3.org/2000/svg"
-         className="h-4 w-4 text-red-600"
-         fill="none"
-         viewBox="0 0 24 24"
-         stroke="currentColor"
-    >
-      <path strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-      />
-    </svg>
-  </button>
-)}
-
+   <div
+  ref={nodeRef}
+  style={{
+    width:    data.width   || 280,
+    height:   'auto',
+    boxSizing:'border-box',
+  }}
+  className="
+    relative
+    bg-white dark:bg-gray-800
+    border-2 rounded-lg shadow-md
+    p-4 flex flex-col
+    cursor-default
+  "
+>
+      {selected && (
+        <button
+          onClick={() => data.onDelete(id)}
+          className="absolute -top-1% right-3 bg-white p-1 rounded-full shadow hover:bg-red-50 transition"
+          title="Delete this node"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3m-4 0h14" />
+          </svg>
+        </button>
+      )}
 
       {/* Top incoming handle */}
-      <Handle
-        type="target"
-        position="top"
-        id="in"
-        style={{ background: "#E4405F", width: 10, height: 10 }}
-      />
+      <Handle type="target" position="top" id="in" style={{ background: color, width: 10, height: 10 }} />
 
-           {/* Bottom handle (outgoing) */}
-      <Handle
-        type="source"
-        position="bottom"
-        id="out"
-        style={{ background: "#34D399", width: 10, height: 10 }}
-      />
-
-      
-       {/* Bottom-right “Next Step →” handle */}
-        <div className="absolute bottom-[-1px] right-2 flex items-center space-x-1">
-          <Handle
-            type="source"
-            position="bottom"
-            id="out"
-          />
-          <span className="text-xs text-gray-700 dark:text-gray-300">Next Step →</span>
-        </div>
-
-      {/* Header row: Instagram gradient circle + “Send Message” */}
+      {/* Header: icon + title */}
       <div className="flex items-center space-x-2 mb-2">
-        <div
-          className="h-6 w-6 flex-shrink-0 rounded-full flex items-center justify-center"
-          style={{
-            background:
-              "linear-gradient(45deg, #F58529 0%, #DD2A7B 50%, #8134AF 75%, #515BD4 100%)",
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-3 w-3 text-white"
-            viewBox="0 0 24 24"
-          >
-            <path d="M7.75 2C5.402 2 3.182 3.402 2 5.75v12.5C3.182 20.598 5.402 22 7.75 22h8.5c2.348 0 4.568-1.402 5.75-3.75V5.75C20.568 3.402 18.348 2 15.999 2h-8.25Zm4.249 3.2a4.8 4.8 0 1 1 0 9.6 4.8 4.8 0 0 1 0-9.6Zm5.3-0.25a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z" />
-          </svg>
-        </div>
-        <span className="text-base font-medium text-gray-800 dark:text-gray-200">
-          Instagram
-        </span>
+        {iconSvg}
+        <span className="text-base font-medium text-gray-800 dark:text-gray-200">{title}</span>
       </div>
 
-      {/* Dashed “Add a text” area */}
-      <div
-        className="
-          flex-1
-          border-2 border-dashed border-gray-300 dark:border-gray-600
-          rounded-lg
-          p-2
-          flex items-center justify-center
-          text-gray-500 dark:text-gray-400
-          text-sm
-          mb-3
-          cursor-text
-          overflow-hidden
-        "
-        onClick={() => setIsEditing(true)}
-      >
-        {isEditing ? (
-          <textarea
-            ref={textareaRef}
-            className="
-              w-full h-full
-              bg-transparent text-gray-900 dark:text-gray-100
-              text-sm focus:outline-none resize-none overflow-hidden
-            "
-            value={data.label}
-            onChange={handleContentChange}
-            onBlur={handleBlur}
-            onKeyDown={handleKeyDown}
-            rows={1}
-            placeholder="Add a text"
-          />
-        ) : (
-          <span className="whitespace-normal break-words">
-            {data.label || "Add a text"}
-          </span>
-        )}
-      </div>
+      {/* Dashed text area */}
+         <div
+      ref={data.nodeRef}
+      className={`p-4 bg-white dark:bg-gray-800 rounded shadow ${
+        selected ? 'border-2 border-blue-500' : ''
+      }`}
+      style={{ width: data.width || 250 }}
+    >
+      <Handle type="target" position="top" />
+      
+      <h3 className="text-lg font-semibold mb-4">Tell AI what to do</h3>
+      <textarea
+        className="w-full p-2 border rounded mb-4"
+        placeholder="Set a goal for the conversation"
+        value={aiGoal}
+        onChange={e => setAiGoal(e.target.value)}
+      />
 
-      {/* Right‐side outgoing handle (bare circle) */}
-      <div className="absolute right-[-6px] top-1/2 transform -translate-y-1/2">
-        <Handle
-          type="source"
-          position="bottom"
-          id="out"
-          style={{
-            background: "#FFFFFF",
-            width: 12,
-            height: 12,
-            border: "2px solid #E4405F",
-            borderRadius: "50%",
-          }}
-        />
-      </div>
+      <h3 className="text-lg font-semibold mb-2">Give AI context</h3>
+      <textarea
+        className="w-full p-2 border rounded mb-4"
+        placeholder="Share all the info"
+        value={aiContext}
+        onChange={e => setAiContext(e.target.value)}
+      />
+
+      <Handle type="source" position="bottom" />
+    </div>
+
+      {/* Inline “Next Step →” label + handle */}
+     <div className="absolute bottom-2 right-2 flex items-center space-x-1">
+  <span className="text-xs text-gray-700 dark:text-gray-300">
+    Next Step 
+  </span>
+  <Handle
+    type="source"
+    position="bottom"
+    id="out"
+    // override React Flow’s absolute positioning
+    style={{
+      position: "static",
+      transform: "none",
+      marginLeft: 4,
+      background: "#34D399",
+      width: 10,
+      height: 10,
+    }}
+  />
+</div>
 
       {/* Resize handle */}
       <div
-        // onMouseDown={onResizeMouseDown}
-        // className="absolute bottom-2 right-2 w-3 h-3 bg-green-400 cursor-se-resize rounded-sm"
-        // title="Drag to resize"
+        onMouseDown={onResizeMouseDown}
+        className="absolute bottom-2 right-2 w-3 h-3 bg-gray-400 cursor-se-resize rounded-sm"
+        title="Drag to resize"
       />
     </div>
   );
 });
-
-//
-// ─── AIModuleNode ───────────────────────────────────────────────────────────
-// A generic “AI” block; click to add/edit text. It already has top and right handles.
-//
-const AIModuleNode = React.memo(function AIModuleNode({ id, data }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const textareaRef = useRef(null);
-
-  useEffect(() => {
-    if (isEditing && textareaRef.current) {
-      textareaRef.current.focus();
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [isEditing]);
-
-  useEffect(() => {
-    if (isEditing && textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [data.label, isEditing]);
-
-  const handleChange = (e) => data.onChange(id, e.target.value);
-  const handleBlur = () => setIsEditing(false);
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      setIsEditing(false);
-    }
-  };
-
-  return (
-    <div
-      onClick={(e) => {
-        e.stopPropagation();
-        data.onOpenAI(id);
-      }}
-      className="
-     relative bg-white p-4 rounded shadow 
-        cursor-pointer
-      "
-      style={{ minWidth: 200, minHeight: 80 }}
-    >
-      {/* Top handle (incoming) */}
-      <Handle
-        type="target"
-        position="top"
-        id="in"
-        style={{ background: "#6366F1", width: 10, height: 10 }}
-      />
-      {isEditing ? (
-        <textarea
-          ref={textareaRef}
-          onMouseDown={(e) => e.stopPropagation()}
-          className="
-            w-full h-full
-            bg-transparent text-gray-900 dark:text-gray-100
-            text-sm focus:outline-none resize-none overflow-hidden
-          "
-          value={data.label}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
-          rows={1}
-          placeholder="Click to add message"
-        />
-      ) : (
-        <div className="min-h-[20px] text-gray-900 dark:text-gray-100 text-sm whitespace-normal break-words">
-          {data.label || (
-            <span className="text-gray-400 dark:text-gray-500 italic">
-              Click to add message
-            </span>
-          )}
-        </div>
-      )}
-      {/* Right handle (outgoing) */}
-      <div className="absolute right-[-5px] top-1/2 transform -translate-y-1/2">
-        <Handle
-          type="source"
-          position="right"
-          id="out"
-          style={{ background: "#6366F1", width: 10, height: 10 }}
-        />
-      </div>
-    </div>
-  );
-}); // ← React.memo is now properly closed
-
 
 //
 // ─── Register Node Types ─────────────────────────────────────────────────────
@@ -924,7 +699,6 @@ const nodeTypes = {
   trigger: TriggerNode,
   selector: SelectorNode,
   facebook: FacebookMessageNode,
-  instagram: InstagramMessageNode,
   ai: AIModuleNode,
 };
 
@@ -938,8 +712,10 @@ export default function AutomationFlow() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNodeIds, setSelectedNodeIds] = useState([]);
-  const [aiGoal, setAiGoal] = useState("");
-  const [aiContext, setAiContext] = useState("");
+  const [aiGoal, setAiGoal] = useState('');
+  const [aiContext, setAiContext] = useState('');
+
+
   
 
 
@@ -1017,7 +793,13 @@ const handleSubmitAI = useCallback(() => {
       const newSelector = {
         id: newSelectorId,
         type: "selector",
-        data: { width: 200, height: 300, onSelect: (choiceLabel) => spawnBranchNode(choiceLabel, newSelectorId),onDelete: deleteNode, },
+        data: {
+      width: 200, height: 300,
+      onSelect: choiceLabel => spawnBranchNode(choiceLabel, newSelectorId),
+      onSelectAI: (aiLabel, selectorId) => spawnBranchNode(aiLabel, selectorId),
+      onDelete: deleteNode,
+      onOpenAI: handleOpenAIConfig,
+    },
         position: { x: triggerNode.position.x + triggerNode.data.width + 50, y: triggerNode.position.y },
       };
       setEdges((prev) =>
@@ -1027,41 +809,62 @@ const handleSubmitAI = useCallback(() => {
     });
   }, [setNodes, setEdges]);
 
-  const spawnBranchNode = useCallback((label, selectorId) => {
-    setNodes((nds) => {
-      const selector = nds.find((n) => n.id === selectorId);
-      const newId = getId();
-      let nodeType = "ai";
-      let width = 300;
-      let height = 180;
-      switch (label) {
-        case "Messenger": nodeType = "facebook"; break;
-        case "Instagram": nodeType = "instagram"; break;
-
-        default: nodeType = "ai"; break;
+  const spawnBranchNode = useCallback((label, parentId) => {
+  setNodes((nds) => {
+    const parent = nds.find(n => n.id === parentId);
+    const newId = getId();
+ let nodeType = "ai", provider = label.toLowerCase().replace(" ", "");
+    switch (label) {
+      case "Messenger":
+        nodeType = "facebook";
+        provider = null;
+        break;
+      case "ChatGPT":
+      case "Cloude AI":
+        nodeType = "ai"; // reuse AIModuleNode
+        break;
+      default:
+        nodeType = "ai";
       }
-      const newNode = {
-        id: newId,
-        type: nodeType,
-        data: { width, height, label: "", onOpenAI: handleOpenAIConfig, onResize: handleResize, onChange: handleLabelChange,  onDelete: deleteNode, },
-        position: { x: selector ? selector.position.x + selector.data.width + 50 : 600, y: selector ? selector.position.y : 100 },
-      };
-      return [...nds, newNode];
-    });
-  }, [setNodes, handleResize, handleLabelChange]);
+   
+    const newNode = {
+      id: newId,
+      type: nodeType,
+      data: {
+        width: 300,
+        height: 180,
+        label: "",
+        provider,               // <-- tell the node which AI provider
+        onOpenAI: handleOpenAIConfig,
+        onResize: handleResize,
+        onChange: handleLabelChange,
+        onDelete: deleteNode,
+      },
+      position: {
+        x: parent.position.x + parent.data.width + 50,
+        y: parent.position.y,
+      },
+    };
 
-  // const deleteSelectedNodes = () => {
-  //   if (!selectedNodeIds.length) return;
-  //   setNodes((nds) => nds.filter((n) => !selectedNodeIds.includes(n.id)));
-  //   setEdges((eds) => eds.filter((e) => !selectedNodeIds.includes(e.source) && !selectedNodeIds.includes(e.target)));
-  //   setSelectedNodeIds([]);
-  // };
+    // connect parent → newNode
+    setEdges(edg => addEdge({
+      id: `edge_${parentId}_${newId}`,
+      source: parentId,
+      sourceHandle: "out",
+      target: newId,
+      targetHandle: "in",
+      type: "smoothstep",
+    }, edg));
+
+    return [...nds, newNode];
+  });
+}, [setNodes, setEdges, handleResize, handleLabelChange, deleteNode, handleOpenAIConfig]);
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       <div className="flex flex-1 overflow-hidden">
         <aside className="w-1/4 p-6 bg-white dark:bg-gray-800 border-r dark:border-gray-700 flex flex-col space-y-6 overflow-y-auto">
-          <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">✨ Automation Builder</h2>
+          <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">✨Automation Builder</h2>
           <p className="text-gray-600 dark:text-gray-400 text-sm">Click “New Trigger” below to add your first trigger.</p>
           <div className="space-y-2">
             <div className="font-medium text-gray-700 dark:text-gray-300">When…</div>
@@ -1085,43 +888,6 @@ const handleSubmitAI = useCallback(() => {
             <Controls />
             <Background variant="dots" gap={24} size={1} color="#d1d5db" />
           </ReactFlow>
-
-   {openAIConfig && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96">
-      <h3 className="text-lg font-semibold mb-4">Tell AI what to do</h3>
-      <textarea
-        className="w-full p-2 border rounded mb-4"
-        placeholder="Set a goal for the conversation"
-        value={aiGoal}
-        onChange={e => setAiGoal(e.target.value)}
-      />
-      <h3 className="text-lg font-semibold mb-2">Give AI context</h3>
-      <textarea
-        className="w-full p-2 border rounded mb-4"
-        placeholder="Share all the info"
-        value={aiContext}
-        onChange={e => setAiContext(e.target.value)}
-      />
-      <div className="flex justify-end space-x-2">
-        <button
-          className="px-4 py-2 bg-black text-white rounded"
-          onClick={() => setOpenAIConfig(null)}
-        >
-          Cancel
-        </button>
-        <button
-          className="px-4 py-2 bg-blue-600 text-white rounded"
-          onClick={handleSubmitAI}
-        >
-          ✨ Generate
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-
         </div>
       </div>
     </div>
