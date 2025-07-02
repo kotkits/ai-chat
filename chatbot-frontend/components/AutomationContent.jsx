@@ -39,16 +39,24 @@ const TriggerNode = React.memo(({ id, data, selected }) => {
       className="relative bg-white dark:bg-gray-800 border-2 border-green-400 rounded-lg shadow-md p-4 flex flex-col"
     >
       {selected && (
-        <button
-          onClick={() => data.onDelete(id)}
-          className="absolute -top-1% right-3 bg-white p-1 rounded-full shadow hover:bg-red-50 transition"
-          title="Delete this node"
-        >
-          {/* Trashcan icon */}
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6m2 0a2 2 0 01-2 2H9a2 2 0 01-2-2m5-6v6m0 0V7m0 6V7m-1-3h4m-6 0h6m-6 0v-1a2 2 0 012-2h2a2 2 0 012 2v1" />
-          </svg>
-        </button>
+   <button
+    onClick={() => data.onDelete(id)}
+    className="absolute -top-1% right-3 bg-white p-1 rounded-full shadow hover:bg-red-50 transition"
+    title="Delete this node"
+  >
+  <svg xmlns="http://www.w3.org/2000/svg"
+       className="h-4 w-4 text-red-600"
+       fill="none"
+       viewBox="0 0 24 24"
+       stroke="currentColor"
+  >
+    <path strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3m-4 0h14"
+    />
+  </svg>
+  </button>
       )}
       <div className="flex items-center mb-2">
         <span className="text-2xl text-green-500 mr-2">⚡</span>
@@ -522,7 +530,7 @@ const AIModuleNode = React.memo(function AIModuleNode({ id, data, selected }) {
   const nodeRef = useRef(null);
 
   const [aiGoal, setAiGoal]     = useState(data.aiGoal   || '');
-const [aiContext, setAiContext] = useState(data.aiContext || '');
+  const [aiContext, setAiContext] = useState(data.aiContext || '');
 
   // Resize tracking
   const isResizingRef = useRef(false);
@@ -531,16 +539,6 @@ const [aiContext, setAiContext] = useState(data.aiContext || '');
   const startWRef = useRef(data.width);
   const startHRef = useRef(data.height);
 
-  const onResizeMouseDown = (e) => {
-    e.stopPropagation();
-    isResizingRef.current = true;
-    startXRef.current = e.clientX;
-    startYRef.current = e.clientY;
-    startWRef.current = data.width;
-    startHRef.current = data.height;
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-  };
 
   const onMouseMove = (e) => {
     if (!isResizingRef.current) return;
@@ -558,11 +556,13 @@ const [aiContext, setAiContext] = useState(data.aiContext || '');
   };
 
   // Sync local state back to the node data when it changes
-  useEffect(() => {
+ useEffect(() => {
     if (data.onChange) {
-      data.onChange({ aiGoal, aiContext });
+      // NOTE: onChange signature: (id, { aiGoal, aiContext }) 
+      data.onChange(id, { aiGoal, aiContext });
     }
   }, [aiGoal, aiContext]);
+
 
   // Auto-resize textarea on edit
   useEffect(() => {
@@ -597,21 +597,15 @@ const [aiContext, setAiContext] = useState(data.aiContext || '');
   const title = data.provider === 'chatgpt' ? 'ChatGPT' : 'Cloude AI';
 
   return (
-   <div
-  ref={nodeRef}
-  style={{
-    width:    data.width   || 280,
-    height:   'auto',
-    boxSizing:'border-box',
-  }}
-  className="
-    relative
-    bg-white dark:bg-gray-800
-    border-2 rounded-lg shadow-md
-    p-4 flex flex-col
-    cursor-default
-  "
->
+    <div
+      ref={nodeRef}
+      style={{
+        width: data.width || 280,
+        height: 'auto',
+        boxSizing: 'border-box',
+      }}
+      className="relative bg-white dark:bg-gray-800 border-2 rounded-lg shadow-md p-4 flex flex-col cursor-default"
+    >
       {selected && (
         <button
           onClick={() => data.onDelete(id)}
@@ -624,43 +618,44 @@ const [aiContext, setAiContext] = useState(data.aiContext || '');
         </button>
       )}
 
-      {/* Top incoming handle */}
-      <Handle type="target" position="top" id="in" style={{ background: color, width: 10, height: 10 }} />
+      {/* Top handle */}
+      <Handle
+        type="target"
+        position="top"
+        style={{
+          background: data.provider === 'chatgpt' ? '#6366F1' : '#10B981',
+          width: 10,
+          height: 10,
+        }}
+      />
 
+      
       {/* Header: icon + title */}
       <div className="flex items-center space-x-2 mb-2">
         {iconSvg}
         <span className="text-base font-medium text-gray-800 dark:text-gray-200">{title}</span>
       </div>
 
-      {/* Dashed text area */}
-         <div
-      ref={data.nodeRef}
-      className={`p-4 bg-white dark:bg-gray-800 rounded shadow ${
-        selected ? 'border-2 border-blue-500' : ''
-      }`}
-      style={{ width: data.width || 250 }}
-    >
-      <Handle type="target" position="top" />
-      
-      <h3 className="text-lg font-semibold mb-4">Tell AI what to do</h3>
-      <textarea
-        className="w-full p-2 border rounded mb-4"
-        placeholder="Set a goal for the conversation"
-        value={aiGoal}
-        onChange={e => setAiGoal(e.target.value)}
-      />
+      {/* AI configuration panel */}
+      <div className="p-4 bg-white dark:bg-gray-800 rounded shadow">
+        <h3 className="text-lg font-semibold mb-4">Tell AI what to do</h3>
+        <textarea
+          className="w-full p-2 border rounded mb-4"
+          placeholder="Set a goal for the conversation"
+          value={aiGoal}
+          onChange={e => setAiGoal(e.target.value)}
+        />
 
-      <h3 className="text-lg font-semibold mb-2">Give AI context</h3>
-      <textarea
-        className="w-full p-2 border rounded mb-4"
-        placeholder="Share all the info"
-        value={aiContext}
-        onChange={e => setAiContext(e.target.value)}
-      />
+        <h3 className="text-lg font-semibold mb-2">Give AI context</h3>
+        <textarea
+          className="w-full p-2 border rounded mb-4"
+          placeholder="Share all the info"
+          value={aiContext}
+          onChange={e => setAiContext(e.target.value)}
+        />
 
-      <Handle type="source" position="bottom" />
-    </div>
+       
+      </div>
 
       {/* Inline “Next Step →” label + handle */}
      <div className="absolute bottom-2 right-2 flex items-center space-x-1">
@@ -682,13 +677,6 @@ const [aiContext, setAiContext] = useState(data.aiContext || '');
     }}
   />
 </div>
-
-      {/* Resize handle */}
-      <div
-        onMouseDown={onResizeMouseDown}
-        className="absolute bottom-2 right-2 w-3 h-3 bg-gray-400 cursor-se-resize rounded-sm"
-        title="Drag to resize"
-      />
     </div>
   );
 });
@@ -696,10 +684,10 @@ const [aiContext, setAiContext] = useState(data.aiContext || '');
 //
 // ─── Register Node Types ─────────────────────────────────────────────────────
 const nodeTypes = {
-  trigger: TriggerNode,
+  trigger:  TriggerNode,
   selector: SelectorNode,
   facebook: FacebookMessageNode,
-  ai: AIModuleNode,
+  ai:       AIModuleNode,
 };
 
 let idCounter = 1;
@@ -712,33 +700,17 @@ export default function AutomationFlow() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNodeIds, setSelectedNodeIds] = useState([]);
-  const [aiGoal, setAiGoal] = useState('');
-  const [aiContext, setAiContext] = useState('');
-
-
-  
 
 
   const [openAIConfig, setOpenAIConfig] = useState(null);
 // openAIConfig will hold the node id or null
 
+
+// Opens the AI-config panel
 const handleOpenAIConfig = useCallback((nodeId) => {
-  setAiGoal("");
-  setAiContext("");
   setOpenAIConfig(nodeId);
 }, []);
 
-const handleSubmitAI = useCallback(() => {
-  if (!openAIConfig) return;
-  setNodes((nds) =>
-    nds.map((n) =>
-      n.id === openAIConfig
-        ? { ...n, data: { ...n.data, label: aiGoal } }
-        : n
-    )
-  );
-  setOpenAIConfig(null);
-}, [openAIConfig, aiGoal, setNodes]);
 
 
   // ────── DELETE A SINGLE NODE ───────────────────────────────────────────────
@@ -760,6 +732,8 @@ const handleSubmitAI = useCallback(() => {
       )
     );
   }, [setNodes]);
+
+  
 
   const handleResize = useCallback((id, newW, newH) => {
     setNodes((nds) =>
@@ -867,13 +841,12 @@ const handleSubmitAI = useCallback(() => {
           <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">✨Automation Builder</h2>
           <p className="text-gray-600 dark:text-gray-400 text-sm">Click “New Trigger” below to add your first trigger.</p>
           <div className="space-y-2">
-            <div className="font-medium text-gray-700 dark:text-gray-300">When…</div>
             <button onClick={() => { const newId = getId(); setNodes((nds) => [...nds, { id: newId, type: "trigger", data: { width: 300, height: 160, onOpenAI: handleOpenAIConfig, onResize: handleResize, onAddTrigger: spawnSelector, onDelete: deleteNode,  }, position: { x: 200, y: 20 + nds.length * 200 } }]); }} className="w-full text-center px-3 py-2 border-2 border-dashed border-green-400 rounded-lg text-green-600 font-semibold hover:bg-green-50 dark:hover:bg-gray-700 transition">+New Trigger</button>
           </div>
           
         </aside>
         <div className="flex-1 relative">
-          <ReactFlow
+        <ReactFlow
             nodes={nodes}
             edges={edges}
             onNodesChange={onNodesChange}
@@ -885,9 +858,9 @@ const handleSubmitAI = useCallback(() => {
         setSelectedNodeIds(selected);
       }}
           >
-            <Controls />
+           <Controls />
             <Background variant="dots" gap={24} size={1} color="#d1d5db" />
-          </ReactFlow>
+            </ReactFlow>
         </div>
       </div>
     </div>
