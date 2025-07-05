@@ -405,35 +405,27 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data, 
         id="in"
         style={{ background: "#0084FF", width: 10, height: 10 }}
       />
-
-      {/* Bottom handle (outgoing)
-      <Handle
-        type="source"
-        position="bottom"
-        id="out"
-        style={{ background: "#34D399", width: 10, height: 10 }}
-      /> */}
-
       
     {/* Inline “Next Step →” label + handle */}
 <div className="absolute bottom-2 right-2 flex items-center space-x-1">
   <span className="text-xs text-gray-700 dark:text-gray-300">
     Next Step 
   </span>
-  <Handle
-    type="source"
-    position="bottom"
-    id="out"
-    // override React Flow’s absolute positioning
-    style={{
-      position: "static",
-      transform: "none",
-      marginLeft: 4,
-      background: "#34D399",
-      width: 10,
-      height: 10,
-    }}
-  />
+ <Handle
+  type="source"
+  position="bottom"
+  id="out"
+  style={{
+    position: "static",
+    transform: "none",
+    marginLeft: 4,
+    background: "#34D399",
+    width: 10,
+    height: 10,
+    cursor: "pointer",            // hint that it’s clickable
+  }}
+  onClick={() => data.onAddTrigger(id)}
+/>
 </div>
 
 
@@ -508,13 +500,6 @@ const FacebookMessageNode = React.memo(function FacebookMessageNode({ id, data, 
           }}
         />
       </div>
-
-      {/* Resize handle */}
-      <div
-        // onMouseDown={onResizeMouseDown}
-        // className="absolute bottom-2 right-2 w-3 h-3 bg-green-400 cursor-se-resize rounded-sm"
-        // title="Drag to resize"
-      />
     </div>
   );
 });
@@ -663,19 +648,20 @@ const AIModuleNode = React.memo(function AIModuleNode({ id, data, selected }) {
     Next Step 
   </span>
   <Handle
-    type="source"
-    position="bottom"
-    id="out"
-    // override React Flow’s absolute positioning
-    style={{
-      position: "static",
-      transform: "none",
-      marginLeft: 4,
-      background: "#34D399",
-      width: 10,
-      height: 10,
-    }}
-  />
+  type="source"
+  position="bottom"
+  id="out"
+  style={{
+    position: "static",
+    transform: "none",
+    marginLeft: 4,
+    background: "#34D399",
+    width: 10,
+    height: 10,
+    cursor: "pointer",            // hint that it’s clickable
+  }}
+  onClick={() => data.onAddTrigger(id)}
+/>
 </div>
     </div>
   );
@@ -813,6 +799,7 @@ const handleOpenAIConfig = useCallback((nodeId) => {
         onResize: handleResize,
         onChange: handleLabelChange,
         onDelete: deleteNode,
+        onAddTrigger: spawnSelector, 
       },
       position: {
         x: parent.position.x + parent.data.width + 50,
