@@ -1,16 +1,24 @@
-// File: pages/api/settings/notifications.js
 import clientPromise from '../../../lib/mongodb';
 
 export default async function handler(req, res) {
-  const namespace = 'notifications';
   const client = await clientPromise;
   const db = client.db();
   const coll = db.collection('settings');
+  const namespace = 'notifications';
 
   if (req.method === 'GET') {
     const doc = await coll.findOne({ namespace });
-    const defaultPayload = { desktop: [], emailSms: [] };
-    return res.status(200).json(doc?.payload || defaultPayload);
+    const defaults = {
+      liveChatDesktop: {
+        newMessageAssigned: false,
+        newConversationUnassigned: false,
+        conversationAssigned: false,
+      },
+      liveChatChannel: {
+        conversationAssigned: false,
+      },
+    };
+    return res.status(200).json(doc?.payload || defaults);
   }
 
   if (req.method === 'PUT') {

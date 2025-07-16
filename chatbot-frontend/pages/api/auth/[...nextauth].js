@@ -1,77 +1,63 @@
-// pages/api/auth/[...nextauth].js
-import NextAuth from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import clientPromise from '../../../lib/mongodb';
-import bcrypt from 'bcrypt';
+// File: pages/api/auth/[...nextauth].js
+
+import NextAuth from 'next-auth'
+import FacebookProvider from 'next-auth/providers/facebook'
+import GoogleProvider   from 'next-auth/providers/google'
+import { MongoDBAdapter } from '@next-auth/mongodb-adapter'
+import clientPromise      from '../../../lib/mongodb'
 
 export default NextAuth({
-  secret: process.env.NEXTAUTH_SECRET,
-  session: {
-    strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
-  },
-  providers: [
-    CredentialsProvider({
-      name: 'Credentials',
-      credentials: {
-        identifier: { label: 'Username or Email', type: 'text' },
-        password:    { label: 'Password', type: 'password' },
-      },
-      async authorize(credentials) {
-        const { identifier, password } = credentials;
+  adapter: MongoDBAdapter(clientPromise),
+  secret:  process.env.NEXTAUTH_SECRET,
 
-        // 1) Admin shortcut
-        if (
-          identifier === process.env.ADMIN_USERNAME &&
-          password   === process.env.ADMIN_PASSWORD
-        ) {
-          return {
-            id:    'admin-id',
-            name:  'Administrator',
-            email: process.env.ADMIN_EMAIL,
-            role:  'admin'
-          };
-        }
-
-        // 2) Lookup user in MongoDB
-        const client = await clientPromise;
-        const db = client.db();
-        const user = await db.collection('users').findOne({
-          $or: [
-            { email:    identifier },
-            { username: identifier }
-          ]
-        });
-
-        if (!user) return null;
-        const isValid = await bcrypt.compare(password, user.password);
-        if (!isValid) return null;
-
-        return {
-          id:    user._id.toString(),
-          name:  user.username,
-          email: user.email,
-          role:  user.role || 'user'
-        };
-      }
-    })
-  ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id   = user.id;
-        token.role = user.role;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      session.user.id   = token.id;
-      session.user.role = token.role;
-      return session;
-    }
-  },
   pages: {
     signIn: '/login',
     error:  '/login'
+  },
+
+  providers: [
+    FacebookProvider({
+      clientId:     process.env.FACEBOOK_ID,
+      clientSecret: process.env.FACEBOOK_SECRET,
+      authorization: {
+        // only ask for exactly what we need:
+        params: { scope: 'email,public_profile,pages_show_list' }
+      }
+    }),
+    GoogleProvider({
+      clientId:     process.env.GOOGLE_ID,
+      clientSecret: process.env.GOOGLE_SECRET,
+      authorization: { params: { prompt: 'select_account' } }
+    })
+  ],
+
+  callbacks: {
+    // 1) On first sign in, stash the user ID into token.sub
+    async jwt({ token, user, account }) {
+      if (user && user.id) {
+        token.sub = user.id
+      }
+      // Capture the raw Facebook access token once
+      if (account?.provider === 'facebook') {
+        token.facebookAccessToken = account.access_token
+      }
+      return token
+    },
+
+    // 2) Every session request, attach sub + fb token safely
+    async session({ session, token }) {
+      // ensure session and session.user exist
+      session = session || {}
+      session.user = session.user || {}
+
+      // copy over our saved ID
+      if (token?.sub) {
+        session.user.id = token.sub
+      }
+      // expose Facebook token (or null)
+      session.facebookAccessToken = token?.facebookAccessToken ?? null
+
+      return session
+    }
   }
-});
+})

@@ -1,28 +1,70 @@
-// components/DashboardLayout.jsx
-import { useState } from 'react'
-import Navbar from './Navbar'
+// File: components/DashboardLayout.jsx
+import React, { useState, useEffect } from 'react'
+import { useSession, signIn } from 'next-auth/react'
 import Sidebar from './Sidebar'
 
 export default function DashboardLayout({ menuItems, children }) {
+  const { data: session, status } = useSession()
+
+  // 1) Keep track of all linked OAuth accounts
+  const [accounts, setAccounts] = useState([])
+  const [currentAccount, setCurrentAccount] = useState(null)
+
+  // 2) Pages for the selected Facebook account
+  const [pages, setPages] = useState([])
+  const [currentPage, setCurrentPage] = useState(null)
+
+  // 3) Which sidebar menu is active
   const [selected, setSelected] = useState(menuItems[0]?.key)
-  const [collapsed, setCollapsed] = useState(false)
+
+  // On sign-in, load session.user.accounts into state
+  useEffect(() => {
+    if (status === 'authenticated' && session.user.accounts) {
+      const accs = session.user.accounts || []
+      setAccounts(accs)
+      // Prefer Facebook if it’s linked, otherwise fall back to the first
+      const fb = accs.find(a => a.provider === 'facebook')
+      setCurrentAccount(fb ?? accs[0] ?? null)
+    }
+    if (status === 'unauthenticated') {
+      signIn() // redirect to login if not signed in
+    }
+  }, [session, status])
+
+  // Whenever the currentAccount changes, if it's Facebook, fetch its Pages
+  useEffect(() => {
+    if (currentAccount?.provider === 'facebook') {
+      fetch(
+        `/api/pages?provider=facebook&accountId=${currentAccount.id}`
+      )
+        .then(res => res.json())
+        .then(list => {
+          setPages(list)
+          setCurrentPage(list[0] || null)
+        })
+        .catch(console.error)
+    }
+  }, [currentAccount])
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f8faff]">
-      <Navbar toggleSidebar={() => setCollapsed(prev => !prev)} />
-      <div className="flex flex-1 min-h-0">
-        <Sidebar
-          menuItems={menuItems}
-          selected={selected}
-          onSelect={setSelected}
-          collapsed={collapsed}
-        />
-        <main className="flex-1 p-8 overflow-auto">
-          {typeof children === 'function'
-            ? children(selected, setSelected)
-            : children}
-        </main>
-      </div>
+    <div className="flex h-screen">
+      <Sidebar
+        menuItems={menuItems}
+        selected={selected}
+        onSelect={setSelected}
+        // Account & page switcher props:
+        accounts={accounts}
+        currentAccount={currentAccount}
+        onSwitchAccount={setCurrentAccount}
+        pages={pages}
+        currentPage={currentPage}
+        onSwitchPage={setCurrentPage}
+      />
+      <main className="flex-1 p-6 overflow-auto">
+        {typeof children === 'function'
+          ? children(selected, setSelected, currentPage)
+          : children}
+      </main>
     </div>
   )
 }

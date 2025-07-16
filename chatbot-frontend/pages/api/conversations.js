@@ -1,20 +1,18 @@
-// pages/api/conversations.js
-import clientPromise from '../../lib/mongodb';
+// File: pages/api/conversations.js
+import { getSession } from 'next-auth/react'
+import clientPromise   from '../../lib/mongodb'
 
 export default async function handler(req, res) {
-  if (req.method !== 'GET') {
-    res.setHeader('Allow',['GET']);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-  const { username } = req.query;
-  const client = await clientPromise;
-  const coll = client.db().collection('conversations');
-  const filter = username ? { owner: username } : {};
-  const convs = await coll.find(filter).toArray();
-  // serialize _id
-  const out = convs.map(c => ({
-    ...c,
-    _id: c._id.toString()
-  }));
-  res.status(200).json(out);
+  const session = await getSession({ req })
+  if (!session) return res.status(401).end()
+
+  const { pageId } = req.query
+  const db = (await clientPromise).db()
+  const convos = await db
+    .collection('conversations')
+    .find({ pageId })
+    .sort({ lastTime: -1 })
+    .toArray()
+
+  res.status(200).json(convos)
 }
