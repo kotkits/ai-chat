@@ -1,61 +1,46 @@
-// components/SettingsContent.jsx
+// File: components/SettingsContent.jsx
+import React, { useState } from 'react'
 
-import React, { useState, useEffect, useCallback } from 'react'
-import { RiInstagramLine } from 'react-icons/ri'
-import { SiTiktok } from 'react-icons/si'
-import {
-  FaWhatsapp,
-  FaFacebookMessenger,
-  FaTelegramPlane,
-} from 'react-icons/fa'
-import { MdSms } from 'react-icons/md'
-import { HiOutlineMail } from 'react-icons/hi'
+import GeneralSettings              from './settings/GeneralSettings'
+import NotificationsSettings        from './settings/NotificationsSettings'
+import LiveChatBehaviorSettings     from './settings/LiveChatBehaviorSettings'
+import ChannelSettings              from './settings/ChannelSettings'
+import IntegrationsSettings         from './settings/IntegrationsSettings'
 
-
-/**
- * This upgraded SettingsContent.jsx now:
- * 1. Splits each “section” into its own subcomponent for clarity.
- * 2. Uses useEffect + fetch to simulate loading/saving data via API endpoints.
- * 3. Adds basic form validation (e.g., email format) before allowing actions.
- * 4. Shows loading states when fetching or saving.
- * 5. Provides confirmation prompts for destructive actions (e.g., clearing logs, deleting account).
- * 
- * You can replace the placeholder endpoints (e.g., `/api/settings/team-members`) with your real API routes.
- */
-
-const mainItems = [
-  'General',
-  'Notifications',
-  'Team Members',
-  'Logs',
-  'Billing',
-  'Display',
+const sections = [
+  {
+    heading: 'Main',
+    items: [
+      { key: 'general',       label: 'General'       },
+      { key: 'notifications', label: 'Notifications' },
+    ],
+  },
+  {
+    heading: 'Inbox',
+    items: [
+      { key: 'liveChat', label: 'Live Chat Behavior' },
+    ],
+  },
+  {
+    heading: 'Channels',
+    items: [
+      { key: 'messenger', label: 'Messenger' },
+    ],
+  },
+  {
+    heading: 'Extensions',
+    items: [
+      { key: 'integrations', label: 'Integrations' },
+    ],
+  },
 ]
-const inboxItems = ['Live Chat Behavior', 'Auto-Assignment']
-const automationItems = ['Fields', 'Tags']
-const extensionItems = [
-  'API',
-  'Apps',
-  'Integrations',
-  'Payments',
-  'Installed Templates',
-]
-const channelItems = [
-  { icon: <RiInstagramLine />, label: 'Instagram' },
-  { icon: <SiTiktok />, label: 'TikTok' },
-  { icon: <FaWhatsapp />, label: 'WhatsApp' },
-  { icon: <FaFacebookMessenger />, label: 'Messenger' },
-  { icon: <MdSms />, label: 'SMS' },
-  { icon: <HiOutlineMail />, label: 'Email' },
-  { icon: <FaTelegramPlane />, label: 'Telegram' },
-]
-
 
 export default function SettingsContent() {
   const [active, setActive] = useState('general')
+
   return (
     <div className="flex h-full bg-white dark:bg-gray-800 rounded-lg shadow">
-      {/* LEFT NAV COLUMN */}
+      {/* LEFT NAV */}
       <nav className="w-1/4 border-r border-gray-200 dark:border-gray-700 p-4 space-y-6 overflow-y-auto">
         {sections.map(section => (
           <div key={section.heading}>
@@ -82,35 +67,13 @@ export default function SettingsContent() {
         ))}
       </nav>
 
-      {/* RIGHT CONTENT PANEL */}
+      {/* RIGHT CONTENT */}
       <div className="flex-1 p-6 overflow-auto">
-        {active === 'general'     && <GeneralSettings />}
+        {active === 'general'       && <GeneralSettings />}
         {active === 'notifications' && <NotificationsSettings />}
-        {active === 'team'        && <TeamMembersSettings />}
-        {active === 'logs'        && <LogsSettings />}
-        {active === 'billing'     && <BillingSettings />}
-        {active === 'display'     && <DisplaySettings />}
-        {active === 'inbox'       && <LiveChatBehaviorSettings />}
-        {active === 'liveChat'    && <LiveChatBehaviorSettings />}
-        {active === 'autoAssign'  && <AutoAssignmentSettings />}
-
-        {active === 'instagram'   && <ChannelSettings channel="instagram" />}
-        {active === 'tiktok'      && <ChannelSettings channel="tiktok" />}
-        {active === 'whatsapp'    && <ChannelSettings channel="whatsapp" />}
-        {active === 'messenger'   && <ChannelSettings channel="messenger" />}
-        {active === 'sms'         && <ChannelSettings channel="sms" />}
-        {active === 'email'       && <ChannelSettings channel="email" />}
-        {active === 'telegram'    && <ChannelSettings channel="telegram" />}
-
-        {active === 'fields'      && <FieldsSettings />}
-        {active === 'tags'        && <TagsSettings />}
-
-        {active === 'extensions'         && <ExtensionsSettings />}
-        {active === 'api'                && <ApiSettings />}
-        {active === 'apps'               && <AppsSettings />}
-        {active === 'integrations'       && <IntegrationsSettings />}
-        {active === 'payments'           && <PaymentsSettings />}
-        {active === 'installedTemplates' && <InstalledTemplatesSettings />}
+        {active === 'liveChat'      && <LiveChatBehaviorSettings />}
+        {active === 'messenger'     && <ChannelSettings channel="messenger" />}
+        {active === 'integrations'  && <IntegrationsSettings />}
       </div>
     </div>
   )

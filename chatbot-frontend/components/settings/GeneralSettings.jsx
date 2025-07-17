@@ -1,117 +1,130 @@
-// components/settings/GeneralSettings.jsx
 import { useState, useEffect } from 'react';
+import { useSession, signOut } from 'next-auth/react';
+
+// Attempt to get a full IANA list if supported
+const timeZones =
+  typeof Intl.supportedValuesOf === 'function'
+    ? Intl.supportedValuesOf('timeZone')
+    : [Intl.DateTimeFormat().resolvedOptions().timeZone];
 
 export default function GeneralSettings() {
-  const [botName, setBotName]             = useState('');
-  const [language, setLanguage]           = useState('en');
-  const [timeZone, setTimeZone]           = useState('');
-  const [defaultReply, setDefaultReply]   = useState('');
-  const [retentionDays, setRetentionDays] = useState(30);
-  const [loading, setLoading]             = useState(true);
+  const { data: session } = useSession();
+  const [timeZone, setTimeZone] = useState('');
+  const [loading, setLoading]   = useState(true);
 
-  // Load existing settings on mount
   useEffect(() => {
+    // Load only the timeZone from your API
     fetch('/api/settings/general')
-      .then(res => res.json())
-      .then(data => {
-        setBotName(data.botName);
-        setLanguage(data.language);
+      .then((r) => r.json())
+      .then((data) => {
         setTimeZone(data.timeZone);
-        setDefaultReply(data.defaultReply);
-        setRetentionDays(data.retentionDays);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
 
-  // Save handler
-  const save = async () => {
+  const saveTimeZone = async () => {
     setLoading(true);
     await fetch('/api/settings/general', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        botName,
-        language,
-        timeZone,
-        defaultReply,
-        retentionDays
-      })
+      body: JSON.stringify({ timeZone })
     });
-    alert('General settings saved!');
+    alert('Time zone saved!');
     setLoading(false);
   };
 
-  if (loading) {
-    return <p>Loading general settings…</p>;
-  }
+  const leaveAccount = async () => {
+    if (!confirm('Are you sure you want to leave this account?')) return;
+    await fetch('/api/settings/general/leave', { method: 'POST' });
+    // After leaving, sign out
+    signOut();
+  };
+
+  const deleteAccount = async () => {
+    if (!confirm('This is permanent. Delete your account?')) return;
+    await fetch('/api/settings/general', { method: 'DELETE' });
+    // After deletion, sign out
+    signOut();
+  };
+
+  if (loading) return <p>Loading…</p>;
 
   return (
     <div className="space-y-6">
-      <h3 className="text-xl font-semibold">General Settings</h3>
-
-      <div>
-        <label className="block mb-1">Bot Name</label>
-        <input
-          type="text"
-          value={botName}
-          onChange={e => setBotName(e.target.value)}
-          className="w-full p-2 border rounded dark:bg-gray-700"
-        />
-      </div>
-
-      <div>
-        <label className="block mb-1">Default Language</label>
-        <select
-          value={language}
-          onChange={e => setLanguage(e.target.value)}
-          className="w-full p-2 border rounded dark:bg-gray-700"
+      {/* Account Time Zone */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">Account Time Zone</h3>
+          <select
+            value={timeZone}
+            onChange={(e) => setTimeZone(e.target.value)}
+            className="mt-1 p-2 border rounded dark:bg-gray-700"
+          >
+            {timeZones.map((tz) => (
+              <option key={tz} value={tz}>
+                {tz}
+              </option>
+            ))}
+          </select>
+        </div>
+        <button
+          onClick={saveTimeZone}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
-          <option value="en">English</option>
-          <option value="es">Spanish</option>
-          <option value="fr">French</option>
-        </select>
+          Save
+        </button>
+      </div>
+      <p className="text-gray-500 text-sm">
+        All the data in ManyChat will be displayed and exported according to this
+        timezone.{' '}
+        <a
+          href="https://help.manychat.com/hc/en-us/articles/360041161233-Time-Zones-in-ManyChat"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 underline"
+        >
+          Learn more
+        </a>
+      </p>
+
+      <hr />
+
+      {/* Leave Account */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">Leave Account</h3>
+          <p className="text-gray-500 text-sm">
+            Transfer your ownership to another team member if you want to leave
+            this account.
+          </p>
+        </div>
+        <button
+          onClick={leaveAccount}
+          disabled={session?.user?.role !== 'owner'}
+          className="px-4 py-2 bg-gray-300 text-gray-700 rounded disabled:opacity-50"
+        >
+          Leave
+        </button>
       </div>
 
-      <div>
-        <label className="block mb-1">Time Zone</label>
-        <input
-          type="text"
-          value={timeZone}
-          onChange={e => setTimeZone(e.target.value)}
-          placeholder="e.g. America/New_York"
-          className="w-full p-2 border rounded dark:bg-gray-700"
-        />
-      </div>
+      <hr />
 
-      <div>
-        <label className="block mb-1">Default Reply</label>
-        <textarea
-          rows={2}
-          value={defaultReply}
-          onChange={e => setDefaultReply(e.target.value)}
-          className="w-full p-2 border rounded dark:bg-gray-700"
-        />
+      {/* Delete Account */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">Delete Account</h3>
+          <p className="text-gray-500 text-sm">
+            Continue to account deletion
+          </p>
+        </div>
+        <button
+          onClick={deleteAccount}
+          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        >
+          Delete
+        </button>
       </div>
-
-      <div>
-        <label className="block mb-1">Data Retention (days)</label>
-        <input
-          type="number"
-          value={retentionDays}
-          onChange={e => setRetentionDays(+e.target.value)}
-          className="w-32 p-2 border rounded dark:bg-gray-700"
-          min={1}
-        />
-      </div>
-
-      <button
-        onClick={save}
-        disabled={loading}
-        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-      >
-        Save
-      </button>
     </div>
   );
 }
