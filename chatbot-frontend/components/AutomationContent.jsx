@@ -514,8 +514,9 @@ const AIModuleNode = React.memo(function AIModuleNode({ id, data, selected }) {
   const textareaRef = useRef(null);
   const nodeRef = useRef(null);
 
-  const [aiGoal, setAiGoal]     = useState(data.aiGoal   || '');
-  const [aiContext, setAiContext] = useState(data.aiContext || '');
+const aiGoal = data.aiGoal || '';
+const aiContext = data.aiContext || '';
+
 
   // Resize tracking
   const isResizingRef = useRef(false);
@@ -624,20 +625,27 @@ const AIModuleNode = React.memo(function AIModuleNode({ id, data, selected }) {
       {/* AI configuration panel */}
       <div className="p-4 bg-white dark:bg-gray-800 rounded shadow">
         <h3 className="text-lg font-semibold mb-4">Tell AI what to do</h3>
-        <textarea
-          className="w-full p-2 border rounded mb-4"
-          placeholder="Set a goal for the conversation"
+                <textarea
           value={aiGoal}
-          onChange={e => setAiGoal(e.target.value)}
+          onChange={e =>
+            data.onChange(id, {
+              aiGoal: e.target.value,
+              aiContext,
+            })
+          }
         />
 
+
         <h3 className="text-lg font-semibold mb-2">Give AI context</h3>
-        <textarea
-          className="w-full p-2 border rounded mb-4"
-          placeholder="Share all the info"
-          value={aiContext}
-          onChange={e => setAiContext(e.target.value)}
-        />
+              <textarea
+        value={aiContext}
+        onChange={e =>
+          data.onChange(id, {
+            aiGoal,
+            aiContext: e.target.value,
+          })
+        }
+      />
 
        
       </div>
@@ -686,6 +694,7 @@ export default function AutomationFlow() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNodeIds, setSelectedNodeIds] = useState([]);
+  const [selectedNode, setSelectedNode]       = useState(null);
 
 
   const [openAIConfig, setOpenAIConfig] = useState(null);
@@ -709,17 +718,40 @@ const handleOpenAIConfig = useCallback((nodeId) => {
    );
  }, [setNodes, setEdges]);
 
-  const handleLabelChange = useCallback((id, value) => {
-    setNodes((nds) =>
-      nds.map((n) =>
-        n.id === id
-          ? { ...n, data: { ...n.data, label: value, onChange: handleLabelChange } }
-          : n
-      )
-    );
-  }, [setNodes]);
+const handleLabelChange = useCallback((id, value) => {
+  setNodes((nds) => {
+    const newNodes = nds.map((n) => {
+      if (n.id === id) {
+        return {
+          ...n,
+          data: {
+            ...n.data,
+            ...(typeof value === 'string'
+              ? { label: value }
+              : value),
+            onChange: handleLabelChange,
+          },
+        };
+      }
+      return n;
+    });
+
+    // Update the sidebar if that node is open
+    if (selectedNode?.id === id) {
+      const updatedNode = newNodes.find((n) => n.id === id);
+      setSelectedNode(updatedNode);
+    }
+
+    return newNodes;
+  });
+}, [setNodes, selectedNode, setSelectedNode]);
+
 
   
+  // Called when any node is clicked
+  const onNodeClick = useCallback((event, node) => {
+    setSelectedNode(node);
+  }, []);
 
   const handleResize = useCallback((id, newW, newH) => {
     setNodes((nds) =>
@@ -821,16 +853,98 @@ const handleOpenAIConfig = useCallback((nodeId) => {
   });
 }, [setNodes, setEdges, handleResize, handleLabelChange, deleteNode, handleOpenAIConfig]);
 
-  return (
+   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       <div className="flex flex-1 overflow-hidden">
-        <aside className="w-1/4 p-6 bg-white dark:bg-gray-800 border-r dark:border-gray-700 flex flex-col space-y-6 overflow-y-auto">
-          <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">✨Automation Builder</h2>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">Click “New Trigger” below to add your first trigger.</p>
-          <div className="space-y-2">
-            <button onClick={() => { const newId = getId(); setNodes((nds) => [...nds, { id: newId, type: "trigger", data: { width: 300, height: 160, onOpenAI: handleOpenAIConfig, onResize: handleResize, onAddTrigger: spawnSelector, onDelete: deleteNode,  }, position: { x: 200, y: 20 + nds.length * 200 } }]); }} className="w-full text-center px-3 py-2 border-2 border-dashed border-green-400 rounded-lg text-green-600 font-semibold hover:bg-green-50 dark:hover:bg-gray-700 transition">+New Trigger</button>
-          </div>
-          
+        <aside className="w-1/4 p-6 bg-white dark:bg-gray-800 border-r dark:border-gray-700 overflow-y-auto">
+          {selectedNode ? (
+            <div>
+              <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">Node Settings</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">Type: {selectedNode.type}</p>
+              {selectedNode.type === 'facebook' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Message Text</label>
+                  <textarea
+                    className="w-full p-2 border rounded mb-4"
+                    rows={3}
+                    value={selectedNode.data.label || ''}
+                    onChange={e => handleLabelChange(selectedNode.id, e.target.value)}
+                  />
+                </div>
+              )}
+                      {selectedNode.type === 'ai' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  AI Goal
+                </label>
+                <textarea
+                  className="w-full p-2 border rounded mb-3"
+                  rows={2}
+                  value={selectedNode.data.aiGoal || ''}
+                  onChange={(e) => {
+                    const updated = {
+                      aiGoal: e.target.value,
+                      aiContext: selectedNode.data.aiContext,
+                    };
+                    handleLabelChange(selectedNode.id, updated);
+                  }}
+                />
+
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  AI Context
+                </label>
+                <textarea
+                  className="w-full p-2 border rounded mb-4"
+                  rows={3}
+                  value={selectedNode.data.aiContext || ''}
+                  onChange={(e) => {
+                    const updated = {
+                      aiGoal: selectedNode.data.aiGoal,
+                      aiContext: e.target.value,
+                    };
+                    handleLabelChange(selectedNode.id, updated);
+                  }}
+                />
+              </div>
+            )}
+
+              <button
+                onClick={() => setSelectedNode(null)}
+                className="mt-4 text-sm text-red-600 hover:underline"
+              >
+                Close
+              </button>
+            </div>
+          ) : (
+            <div>
+              <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">✨Automation Builder</h2>
+              <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">Click “New Trigger” below to add your first trigger, or select a node to edit.</p>
+              <button
+                onClick={() => {
+                  const newId = getId();
+                  setNodes(nds => [
+                    ...nds,
+                    {
+                      id: newId,
+                      type: "trigger",
+                      data: {
+                        width: 300,
+                        height: 160,
+                        onOpenAI: handleOpenAIConfig,
+                        onResize: handleResize,
+                        onAddTrigger: spawnSelector,
+                        onDelete: deleteNode,
+                      },
+                      position: { x: 200, y: 20 + nds.length * 200 },
+                    },
+                  ]);
+                }}
+                className="w-full text-center px-3 py-2 border-2 border-dashed border-green-400 rounded-lg text-green-600 font-semibold hover:bg-green-50 dark:hover:bg-gray-700 transition"
+              >
+                + New Trigger
+              </button>
+            </div>
+          )}
         </aside>
         <div className="flex-1 relative">
         <ReactFlow
@@ -839,6 +953,7 @@ const handleOpenAIConfig = useCallback((nodeId) => {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            onNodeClick={onNodeClick}
             nodeTypes={nodeTypes}
                onSelectionChange={(elements) => {
         const selected = elements?.nodes?.map((n) => n.id) || [];
